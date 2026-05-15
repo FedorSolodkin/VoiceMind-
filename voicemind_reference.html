@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceMind — Полный технический референс</title>
+<style>
+  :root {
+    --bg: #0f1117; --bg2: #161b22; --bg3: #21262d;
+    --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+    --accent: #58a6ff; --green: #3fb950; --amber: #d29922;
+    --red: #f85149; --purple: #bc8cff; --teal: #39d353;
+    --code-bg: #161b22; --tag-bg: #1f6feb26;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.7; display: flex; }
+  
+  /* SIDEBAR */
+  nav { width: 260px; min-height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; flex-shrink: 0; }
+  nav .logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  nav .logo h1 { font-size: 16px; font-weight: 700; color: var(--accent); letter-spacing: -0.3px; }
+  nav .logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  nav a { display: flex; align-items: center; gap: 8px; padding: 7px 20px; font-size: 13px; color: var(--muted); text-decoration: none; transition: all .15s; border-left: 2px solid transparent; }
+  nav a:hover { color: var(--text); background: var(--bg3); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--tag-bg); }
+  nav .section-label { padding: 14px 20px 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--border); }
+  nav a .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  
+  /* MAIN */
+  main { flex: 1; max-width: 900px; padding: 40px 48px; overflow-x: hidden; }
+  
+  h1.page-title { font-size: 32px; font-weight: 800; color: var(--text); letter-spacing: -1px; margin-bottom: 8px; }
+  .subtitle { font-size: 16px; color: var(--muted); margin-bottom: 40px; }
+  
+  h2 { font-size: 22px; font-weight: 700; color: var(--text); margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); scroll-margin-top: 20px; }
+  h3 { font-size: 16px; font-weight: 600; color: var(--text); margin: 28px 0 12px; }
+  h4 { font-size: 14px; font-weight: 600; color: var(--muted); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  p { color: var(--muted); margin-bottom: 12px; }
+  strong { color: var(--text); font-weight: 600; }
+  
+  /* CODE */
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 16px 0; position: relative; }
+  code { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
+  .inline-code { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; color: var(--teal); }
+  pre .lang-label { position: absolute; top: 10px; right: 14px; font-size: 10px; color: var(--muted); font-family: monospace; letter-spacing: 1px; text-transform: uppercase; }
+  
+  /* Syntax colors */
+  .kw { color: #ff7b72; } /* keywords */
+  .fn { color: #d2a8ff; } /* functions */
+  .str { color: #a5d6ff; } /* strings */
+  .num { color: #79c0ff; } /* numbers */
+  .cm { color: #8b949e; font-style: italic; } /* comments */
+  .tp { color: #ffa657; } /* types */
+  .var { color: #e6edf3; }
+  .op { color: #ff7b72; }
+  
+  /* CARDS & BOXES */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin: 16px 0; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 16px 0; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+  .stat-card .val { font-size: 24px; font-weight: 800; color: var(--accent); }
+  .stat-card .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  
+  .callout { border-radius: 8px; padding: 14px 18px; margin: 16px 0; border-left: 3px solid; }
+  .callout.info { background: #1f6feb18; border-color: var(--accent); }
+  .callout.warn { background: #d2992218; border-color: var(--amber); }
+  .callout.good { background: #3fb95018; border-color: var(--green); }
+  .callout.idea { background: #bc8cff18; border-color: var(--purple); }
+  .callout p { margin: 0; font-size: 13.5px; }
+  .callout strong { display: block; margin-bottom: 4px; font-size: 12px; letter-spacing: 0.5px; }
+  
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13.5px; }
+  th { background: var(--bg3); color: var(--muted); font-weight: 600; text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+  td strong { color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg3); }
+  
+  /* TAGS */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; margin: 2px; }
+  .tag.blue { background: #1f6feb33; color: var(--accent); }
+  .tag.green { background: #3fb95033; color: var(--green); }
+  .tag.amber { background: #d2992233; color: var(--amber); }
+  .tag.red { background: #f8514933; color: var(--red); }
+  .tag.purple { background: #bc8cff33; color: var(--purple); }
+  
+  /* ARCH DIAGRAM */
+  .arch-layer { border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; margin: 8px 0; display: flex; align-items: center; gap: 14px; }
+  .arch-layer .layer-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .arch-layer .layer-name { font-weight: 600; font-size: 14px; }
+  .arch-layer .layer-desc { font-size: 12px; color: var(--muted); }
+  .arch-arrow { text-align: center; color: var(--border); font-size: 18px; margin: 2px 0; }
+  
+  /* FLOW */
+  .flow { display: flex; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+  .flow-step { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12.5px; position: relative; }
+  .flow-step .num { font-size: 10px; color: var(--muted); }
+  .flow-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--border); }
+  
+  /* PINOUT */
+  .pinout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .pin-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: var(--bg3); border-radius: 6px; font-size: 12.5px; }
+  .pin-name { font-family: monospace; color: var(--teal); font-size: 12px; }
+  .pin-func { color: var(--muted); }
+
+  /* MATH BLOCK */
+  .math { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; font-family: monospace; font-size: 13px; margin: 12px 0; color: var(--text); }
+  .math .eq-label { font-size: 10px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .math-var { color: var(--purple); }
+  .math-num { color: #79c0ff; }
+  .math-result { color: var(--green); font-weight: 700; }
+  
+  /* SECTION BADGES */
+  .section-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--tag-bg); border: 1px solid #1f6feb55; border-radius: 20px; padding: 3px 10px; font-size: 12px; color: var(--accent); margin-bottom: 8px; }
+  
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  
+  /* SCROLL */
+  nav::-webkit-scrollbar { width: 4px; }
+  nav::-webkit-scrollbar-track { background: transparent; }
+  nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  
+  @media (max-width: 768px) { nav { display: none; } main { padding: 24px 20px; } }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="logo">
+    <h1>⚡ VoiceMind</h1>
+    <p>Полный технический референс</p>
+  </div>
+
+  <div class="section-label">Архитектура</div>
+  <a href="#overview"><span class="dot" style="background:#58a6ff"></span>Обзор системы</a>
+  <a href="#hardware"><span class="dot" style="background:#3fb950"></span>Железо (ESP32)</a>
+  <a href="#protocol"><span class="dot" style="background:#d29922"></span>Протокол связи</a>
+
+  <div class="section-label">Прошивка</div>
+  <a href="#firmware-i2s"><span class="dot" style="background:#bc8cff"></span>I2S & микрофон</a>
+  <a href="#firmware-bt"><span class="dot" style="background:#bc8cff"></span>Bluetooth SPP</a>
+  <a href="#firmware-power"><span class="dot" style="background:#bc8cff"></span>Энергосбережение</a>
+
+  <div class="section-label">Android App</div>
+  <a href="#android-arch"><span class="dot" style="background:#f85149"></span>Clean Architecture</a>
+  <a href="#android-bt"><span class="dot" style="background:#f85149"></span>BT Receiver</a>
+  <a href="#android-asr"><span class="dot" style="background:#f85149"></span>Vosk ASR</a>
+  <a href="#android-vad"><span class="dot" style="background:#f85149"></span>VAD алгоритм</a>
+  <a href="#android-nlp"><span class="dot" style="background:#f85149"></span>NLP Pipeline</a>
+  <a href="#android-db"><span class="dot" style="background:#f85149"></span>База данных</a>
+  <a href="#android-ui"><span class="dot" style="background:#f85149"></span>Compose UI</a>
+  <a href="#android-analytics"><span class="dot" style="background:#f85149"></span>Аналитика</a>
+
+  <div class="section-label">Математика</div>
+  <a href="#math-audio"><span class="dot" style="background:#39d353"></span>Обработка аудио</a>
+  <a href="#math-tfidf"><span class="dot" style="background:#39d353"></span>TF-IDF & TextRank</a>
+  <a href="#math-power"><span class="dot" style="background:#39d353"></span>Энергетика</a>
+
+  <div class="section-label">Запуск</div>
+  <a href="#ide-setup"><span class="dot" style="background:#ffa657"></span>IDE & Окружение</a>
+  <a href="#bom"><span class="dot" style="background:#ffa657"></span>BOM (список деталей)</a>
+</nav>
+
+<main>
+<h1 class="page-title">VoiceMind</h1>
+<p class="subtitle">Носимый голосовой ассистент с офлайн-распознаванием и локальным ИИ — полный технический референс</p>
+
+<!-- ═══════════════════════════════════════════════ OVERVIEW -->
+<h2 id="overview">Архитектура системы</h2>
+
+<p>Система состоит из четырёх слоёв. Каждый слой независим и обменивается данными строго через определённый интерфейс.</p>
+
+<div class="arch-layer" style="border-color:#1f6feb55">
+  <div class="layer-icon" style="background:#1f6feb22">🎙️</div>
+  <div>
+    <div class="layer-name">Hardware Layer</div>
+    <div class="layer-desc">ESP32-WROOM-32 + ICS-43434 MEMS микрофон + Li-Po 2000mAh + TP4056</div>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:6px; flex-wrap:wrap;">
+    <span class="tag blue">ESP32 240MHz</span>
+    <span class="tag green">I2S 16kHz</span>
+  </div>
+</div>
+<div class="arch-arrow">↓ Bluetooth SPP / BLE GATT ↓</div>
+<div class="arch-layer" style="border-color:#3fb95055">
+  <div class="layer-icon" style="background:#3fb95022">📡</div>
+  <div>
+    <div class="layer-name">Transport Layer</div>
+    <div class="layer-desc">Кастомный бинарный протокол поверх BT Classic SPP. Фреймы с CRC-8, ack/nack</div>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:6px;">
+    <span class="tag green">~256 kbps</span>
+    <span class="tag amber">CRC-8</span>
+  </div>
+</div>
+<div class="arch-arrow">↓ PCM 16kHz 16-bit mono ↓</div>
+<div class="arch-layer" style="border-color:#bc8cff55">
+  <div class="layer-icon" style="background:#bc8cff22">🧠</div>
+  <div>
+    <div class="layer-name">Intelligence Layer (Android)</div>
+    <div class="layer-desc">Vosk ASR → VAD → NLP Pipeline (TF-IDF + TextRank + NER) → Room SQLite</div>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:6px; flex-wrap:wrap;">
+    <span class="tag purple">Vosk 50MB</span>
+    <span class="tag purple">Офлайн</span>
+  </div>
+</div>
+<div class="arch-arrow">↓ Structured JSON Notes ↓</div>
+<div class="arch-layer" style="border-color:#f8514955">
+  <div class="layer-icon" style="background:#f8514922">📱</div>
+  <div>
+    <div class="layer-name">Presentation Layer</div>
+    <div class="layer-desc">Jetpack Compose UI. Экраны: запись, заметки, поиск, аналитика, экспорт</div>
+  </div>
+  <div style="margin-left:auto; display:flex; gap:6px; flex-wrap:wrap;">
+    <span class="tag red">Compose</span>
+    <span class="tag red">MVVM</span>
+  </div>
+</div>
+
+<h3>Поток данных (полный цикл)</h3>
+<div class="flow">
+  <div class="flow-step"><div class="num">01</div>Речь → ICS-43434</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">02</div>I2S → ESP32 DMA</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">03</div>32bit→16bit конверсия</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">04</div>Framing + CRC-8</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">05</div>BT SPP TX</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">06</div>Android BT RX</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">07</div>Packet Parser</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">08</div>VAD фильтр</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">09</div>Vosk ASR</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">10</div>NLP Pipeline</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">11</div>SQLite + Compose</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ HARDWARE -->
+<h2 id="hardware">Железо — ESP32 + ICS-43434</h2>
+
+<h3>Распиновка (Pinout)</h3>
+<div class="pinout-grid">
+  <div>
+    <h4>ICS-43434 → ESP32</h4>
+    <div class="pin-row"><span class="pin-name">SD (Data)</span><span>→</span><span class="pin-name">GPIO 22</span></div>
+    <div class="pin-row"><span class="pin-name">WS (LRCLK)</span><span>→</span><span class="pin-name">GPIO 25</span></div>
+    <div class="pin-row"><span class="pin-name">SCK (BCLK)</span><span>→</span><span class="pin-name">GPIO 26</span></div>
+    <div class="pin-row"><span class="pin-name">VDD</span><span>→</span><span class="pin-name">3.3V</span></div>
+    <div class="pin-row"><span class="pin-name">GND</span><span>→</span><span class="pin-name">GND</span></div>
+    <div class="pin-row"><span class="pin-name">L/R</span><span>→</span><span class="pin-name">GND (левый канал)</span></div>
+  </div>
+  <div>
+    <h4>Периферия</h4>
+    <div class="pin-row"><span class="pin-name">GPIO 0</span><span class="pin-func">Кнопка записи (BOOT)</span></div>
+    <div class="pin-row"><span class="pin-name">GPIO 2</span><span class="pin-func">LED статус (WS2812B)</span></div>
+    <div class="pin-row"><span class="pin-name">GPIO 34</span><span class="pin-func">Батарея ADC (делитель)</span></div>
+    <div class="pin-row"><span class="pin-name">EN</span><span class="pin-func">TP4056 CHRG индикатор</span></div>
+    <div class="pin-row"><span class="pin-name">VIN / 3.3V</span><span class="pin-func">TP4056 OUT → LDO</span></div>
+  </div>
+</div>
+
+<div class="callout info">
+  <strong>⚡ ВАЖНО про ICS-43434</strong>
+  <p>Микрофон выдаёт 32-битные слова, но полезные данные — 24 бита, выровненные по левому краю. На ESP32 нужно читать 32-бит и сдвигать вправо на 8: <span class="inline-code">int16_t sample = (int32_t)(raw >> 8) >> 8;</span> Это даст корректные знаковые 16-бит сэмплы.</p>
+</div>
+
+<h3>Схема питания</h3>
+<div class="card">
+  <strong>Цепочка питания:</strong><br>
+  <code style="font-size:13px; color: var(--teal);">USB-C → TP4056 (4.2V max) → Li-Po 2000mAh → IP5306 (5V boost + 3.3V LDO) → ESP32 + MIC</code>
+  <br><br>
+  <p>IP5306 — лучший выбор вместо голого AMS1117: встроенный boost-конвертер + защита от переразряда + индикатор уровня. Стоит ~$0.5 оптом.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ PROTOCOL -->
+<h2 id="protocol">Протокол связи (BT SPP)</h2>
+
+<h3>Формат пакета</h3>
+<pre><code><span class="cm">/* Структура пакета VoiceMind Transport Protocol v1 */</span>
+
+<span class="cm">┌──────────┬───────────┬───────────┬──────────┬─────────────────────────────┬───────┐
+│ START    │ SEQ[2]    │ TYPE[1]   │ LEN[2]   │ PAYLOAD[LEN]                │ CRC8  │
+│ 0xAA     │ big-end   │ uint8     │ big-end  │ max 1024 bytes              │ uint8 │
+│ 1 byte   │ 2 bytes   │ 1 byte    │ 2 bytes  │ variable                    │ 1byte │
+└──────────┴───────────┴───────────┴──────────┴─────────────────────────────┴───────┘</span>
+
+<span class="cm">/* TYPE коды: */</span>
+<span class="kw">#define</span> <span class="fn">PKT_AUDIO</span>    <span class="num">0x01</span>  <span class="cm">// PCM аудио данные</span>
+<span class="kw">#define</span> <span class="fn">PKT_CTRL</span>     <span class="num">0x02</span>  <span class="cm">// Управление (start/stop)</span>
+<span class="kw">#define</span> <span class="fn">PKT_ACK</span>      <span class="num">0x03</span>  <span class="cm">// Подтверждение</span>
+<span class="kw">#define</span> <span class="fn">PKT_NACK</span>     <span class="num">0x04</span>  <span class="cm">// Запрос повтора</span>
+<span class="kw">#define</span> <span class="fn">PKT_STATUS</span>   <span class="num">0x05</span>  <span class="cm">// Статус (батарея, режим)</span>
+<span class="kw">#define</span> <span class="fn">PKT_HEARTBEAT</span><span class="num">0x06</span>  <span class="cm">// Keepalive каждые 1с</span></code></pre>
+
+<h3>CRC-8 (Maxim/Dallas алгоритм)</h3>
+<div class="math">
+  <div class="eq-label">Полином CRC-8/MAXIM</div>
+  <span class="math-var">P(x)</span> = x⁸ + x⁵ + x⁴ + 1 → <span class="math-num">0x31</span> (отражённый: <span class="math-num">0x8C</span>)<br>
+  Инициализация: <span class="math-var">CRC₀</span> = <span class="math-num">0x00</span><br>
+  Для каждого байта: <span class="math-var">CRC</span> = <span class="math-var">CRC</span> XOR byte, затем 8 итераций сдвига
+</div>
+
+<!-- ═══════════════════════════════════════════════ FIRMWARE I2S -->
+<h2 id="firmware-i2s">Прошивка — I2S + микрофон</h2>
+
+<div class="callout good">
+  <strong>🛠️ Среда разработки: VS Code + PlatformIO</strong>
+  <p>Установи PlatformIO IDE (расширение VS Code). Framework: Arduino. Board: esp32doit-devkit-v1. Библиотеки: BluetoothSerial (встроена в ESP32 Arduino Core), driver/i2s.h (ESP-IDF, встроена).</p>
+</div>
+
+<pre><code class="language-cpp"><span class="lang-label">ESP32 / C++</span><span class="cm">// platform.ini:
+// [env:esp32dev]
+// platform = espressif32
+// board = esp32doit-devkit-v1
+// framework = arduino
+// monitor_speed = 115200
+// build_flags = -DCORE_DEBUG_LEVEL=0</span>
+
+<span class="kw">#include</span> <span class="str">"Arduino.h"</span>
+<span class="kw">#include</span> <span class="str">"driver/i2s.h"</span>
+<span class="kw">#include</span> <span class="str">"BluetoothSerial.h"</span>
+
+<span class="cm">// ─── КОНФИГИ ──────────────────────────────────────────────────</span>
+<span class="kw">#define</span> I2S_WS        <span class="num">25</span>
+<span class="kw">#define</span> I2S_SCK       <span class="num">26</span>
+<span class="kw">#define</span> I2S_SD        <span class="num">22</span>
+<span class="kw">#define</span> BTN_PIN       <span class="num">0</span>
+<span class="kw">#define</span> LED_PIN       <span class="num">2</span>
+<span class="kw">#define</span> BATT_ADC      <span class="num">34</span>
+
+<span class="kw">#define</span> SAMPLE_RATE   <span class="num">16000</span>
+<span class="kw">#define</span> DMA_BUF_LEN   <span class="num">512</span>     <span class="cm">// сэмплов на DMA буфер</span>
+<span class="kw">#define</span> DMA_BUF_CNT   <span class="num">8</span>       <span class="cm">// количество DMA буферов</span>
+<span class="kw">#define</span> PKT_PAYLOAD   <span class="num">1024</span>   <span class="cm">// байт payload за пакет (512 сэмплов × 2)</span>
+<span class="kw">#define</span> PKT_HEADER    <span class="num">7</span>      <span class="cm">// START+SEQ+TYPE+LEN = 7 байт</span>
+
+<span class="tp">BluetoothSerial</span> SerialBT;
+<span class="kw">volatile bool</span> isRecording = <span class="kw">false</span>;
+<span class="tp">uint16_t</span> seqNum = <span class="num">0</span>;
+<span class="tp">int32_t</span> rawBuffer[DMA_BUF_LEN];  <span class="cm">// 32-бит сырой I2S</span>
+<span class="tp">int16_t</span> pcmBuffer[DMA_BUF_LEN];  <span class="cm">// 16-бит PCM для передачи</span>
+<span class="tp">uint8_t</span> pktBuffer[PKT_HEADER + PKT_PAYLOAD + <span class="num">1</span>];
+
+<span class="cm">// ─── CRC-8 (Dallas/Maxim) ─────────────────────────────────────</span>
+<span class="tp">uint8_t</span> <span class="fn">crc8</span>(<span class="tp">uint8_t</span>* data, <span class="tp">size_t</span> len) {
+    <span class="tp">uint8_t</span> crc = <span class="num">0x00</span>;
+    <span class="kw">for</span> (<span class="tp">size_t</span> i = <span class="num">0</span>; i < len; i++) {
+        crc ^= data[i];
+        <span class="kw">for</span> (<span class="tp">int</span> j = <span class="num">0</span>; j < <span class="num">8</span>; j++) {
+            <span class="kw">if</span> (crc & <span class="num">0x80</span>) crc = (crc << <span class="num">1</span>) ^ <span class="num">0x31</span>;
+            <span class="kw">else</span> crc <<= <span class="num">1</span>;
+        }
+    }
+    <span class="kw">return</span> crc;
+}
+
+<span class="cm">// ─── ИНИЦИАЛИЗАЦИЯ I2S ────────────────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">setupI2S</span>() {
+    i2s_config_t cfg = {
+        .mode            = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+        .sample_rate     = SAMPLE_RATE,
+        .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,  <span class="cm">// ICS-43434: 32bit слова</span>
+        .channel_format  = I2S_CHANNEL_FMT_ONLY_LEFT,
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+        .dma_buf_count   = DMA_BUF_CNT,
+        .dma_buf_len     = DMA_BUF_LEN,
+        .use_apll        = <span class="kw">false</span>,
+        .tx_desc_auto_clear = <span class="kw">false</span>,
+        .fixed_mclk      = <span class="num">0</span>
+    };
+    i2s_pin_config_t pins = {
+        .bck_io_num   = I2S_SCK,
+        .ws_io_num    = I2S_WS,
+        .data_out_num = I2S_PIN_NO_CHANGE,
+        .data_in_num  = I2S_SD
+    };
+    i2s_driver_install(I2S_NUM_0, &cfg, <span class="num">0</span>, <span class="kw">NULL</span>);
+    i2s_set_pin(I2S_NUM_0, &pins);
+    i2s_set_clk(I2S_NUM_0, SAMPLE_RATE, I2S_BITS_PER_SAMPLE_32BIT, I2S_CHANNEL_MONO);
+}
+
+<span class="cm">// ─── КОНВЕРТАЦИЯ 32→16 BIT ────────────────────────────────────</span>
+<span class="cm">// ICS-43434: данные в битах 31-8 (MSB выровнены, 24-bit), биты 7-0 = 0</span>
+<span class="cm">// Сдвиг: (int32_t)raw >> 8 даёт 24-бит со знаком, ещё >> 8 = 16-бит</span>
+<span class="kw">void</span> <span class="fn">convertTo16bit</span>(<span class="tp">int32_t</span>* src, <span class="tp">int16_t</span>* dst, <span class="tp">size_t</span> n) {
+    <span class="kw">for</span> (<span class="tp">size_t</span> i = <span class="num">0</span>; i < n; i++) {
+        dst[i] = (<span class="tp">int16_t</span>)((<span class="tp">int32_t</span>)src[i] >> <span class="num">16</span>);  <span class="cm">// правый сдвиг 16 бит</span>
+    }
+}
+
+<span class="cm">// ─── СБОРКА И ОТПРАВКА ПАКЕТА ─────────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">sendAudioPacket</span>(<span class="tp">int16_t</span>* pcm, <span class="tp">size_t</span> samples) {
+    <span class="tp">uint16_t</span> payloadLen = samples * <span class="kw">sizeof</span>(<span class="tp">int16_t</span>);
+    pktBuffer[<span class="num">0</span>] = <span class="num">0xAA</span>;                          <span class="cm">// START</span>
+    pktBuffer[<span class="num">1</span>] = (seqNum >> <span class="num">8</span>) & <span class="num">0xFF</span>;           <span class="cm">// SEQ HI</span>
+    pktBuffer[<span class="num">2</span>] = seqNum & <span class="num">0xFF</span>;                  <span class="cm">// SEQ LO</span>
+    pktBuffer[<span class="num">3</span>] = <span class="num">0x01</span>;                           <span class="cm">// TYPE: AUDIO</span>
+    pktBuffer[<span class="num">4</span>] = (payloadLen >> <span class="num">8</span>) & <span class="num">0xFF</span>;       <span class="cm">// LEN HI</span>
+    pktBuffer[<span class="num">5</span>] = payloadLen & <span class="num">0xFF</span>;              <span class="cm">// LEN LO</span>
+    memcpy(&pktBuffer[<span class="num">6</span>], pcm, payloadLen);          <span class="cm">// PAYLOAD</span>
+    pktBuffer[<span class="num">6</span> + payloadLen] = <span class="fn">crc8</span>(pktBuffer, <span class="num">6</span> + payloadLen); <span class="cm">// CRC</span>
+    SerialBT.write(pktBuffer, PKT_HEADER + payloadLen + <span class="num">1</span>);
+    seqNum++;
+}
+
+<span class="cm">// ─── ПРЕРЫВАНИЕ КНОПКИ ───────────────────────────────────────</span>
+<span class="kw">void</span> IRAM_ATTR <span class="fn">onButtonPress</span>() {
+    isRecording = !isRecording;
+    digitalWrite(LED_PIN, isRecording ? HIGH : LOW);
+}
+
+<span class="kw">void</span> <span class="fn">setup</span>() {
+    Serial.begin(<span class="num">115200</span>);
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(BTN_PIN, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(BTN_PIN), onButtonPress, FALLING);
+    
+    SerialBT.begin(<span class="str">"VoiceMind-01"</span>);  <span class="cm">// Bluetooth имя</span>
+    <span class="fn">setupI2S</span>();
+    Serial.println(<span class="str">"VoiceMind ready. Press button to record."</span>);
+}
+
+<span class="kw">void</span> <span class="fn">loop</span>() {
+    <span class="kw">if</span> (!isRecording || !SerialBT.hasClient()) {
+        delay(<span class="num">10</span>);
+        <span class="kw">return</span>;
+    }
+    
+    <span class="tp">size_t</span> bytesRead = <span class="num">0</span>;
+    <span class="cm">// Читаем один DMA буфер</span>
+    i2s_read(I2S_NUM_0, rawBuffer, DMA_BUF_LEN * <span class="kw">sizeof</span>(<span class="tp">int32_t</span>), &bytesRead, portMAX_DELAY);
+    
+    <span class="tp">size_t</span> samplesRead = bytesRead / <span class="kw">sizeof</span>(<span class="tp">int32_t</span>);
+    <span class="fn">convertTo16bit</span>(rawBuffer, pcmBuffer, samplesRead);
+    <span class="fn">sendAudioPacket</span>(pcmBuffer, samplesRead);
+}</code></pre>
+
+<!-- ═══════════════════════════════════════════════ FIRMWARE BT -->
+<h2 id="firmware-bt">Прошивка — Bluetooth & режимы</h2>
+
+<pre><code class="language-cpp"><span class="lang-label">ESP32 / C++</span><span class="cm">// Статусные сообщения устройству ──────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">sendStatusPacket</span>() {
+    <span class="tp">uint8_t</span> batt = <span class="fn">readBatteryPercent</span>();
+    <span class="tp">uint8_t</span> payload[<span class="num">3</span>] = {
+        batt,           <span class="cm">// уровень батареи 0-100</span>
+        isRecording,    <span class="cm">// статус записи</span>
+        <span class="num">0x01</span>            <span class="cm">// версия прошивки</span>
+    };
+    <span class="tp">uint8_t</span> pkt[<span class="num">7</span> + <span class="num">3</span> + <span class="num">1</span>];
+    pkt[<span class="num">0</span>] = <span class="num">0xAA</span>; pkt[<span class="num">1</span>] = <span class="num">0</span>; pkt[<span class="num">2</span>] = seqNum;
+    pkt[<span class="num">3</span>] = <span class="num">0x05</span>;  <span class="cm">// PKT_STATUS</span>
+    pkt[<span class="num">4</span>] = <span class="num">0</span>; pkt[<span class="num">5</span>] = <span class="num">3</span>;
+    memcpy(&pkt[<span class="num">6</span>], payload, <span class="num">3</span>);
+    pkt[<span class="num">9</span>] = <span class="fn">crc8</span>(pkt, <span class="num">9</span>);
+    SerialBT.write(pkt, <span class="kw">sizeof</span>(pkt));
+}
+
+<span class="cm">// Уровень батареи через делитель напряжения ─────────────────</span>
+<span class="cm">// GPIO34 — ADC1 CH6 (12 бит, 0-4095 = 0-3.3V)</span>
+<span class="cm">// Делитель: 100кОм + 100кОм → V_adc = V_bat / 2</span>
+<span class="cm">// V_bat полная = 4.2V, пустая = 3.0V</span>
+<span class="tp">uint8_t</span> <span class="fn">readBatteryPercent</span>() {
+    <span class="tp">uint32_t</span> adcSum = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="tp">int</span> i = <span class="num">0</span>; i < <span class="num">8</span>; i++) adcSum += analogRead(BATT_ADC);
+    <span class="tp">float</span> v_adc = (adcSum / <span class="num">8.0f</span>) * (<span class="num">3.3f</span> / <span class="num">4095.0f</span>);
+    <span class="tp">float</span> v_bat = v_adc * <span class="num">2.0f</span>;
+    <span class="tp">float</span> pct = (v_bat - <span class="num">3.0f</span>) / (<span class="num">4.2f</span> - <span class="num">3.0f</span>) * <span class="num">100.0f</span>;
+    <span class="kw">return</span> (<span class="tp">uint8_t</span>)constrain(pct, <span class="num">0</span>, <span class="num">100</span>);
+}</code></pre>
+
+<!-- ═══════════════════════════════════════════════ FIRMWARE POWER -->
+<h2 id="firmware-power">Энергосбережение</h2>
+
+<pre><code class="language-cpp"><span class="lang-label">ESP32 / C++</span><span class="cm">// Стратегия: Light Sleep когда нет BT клиента ─────────────────</span>
+<span class="cm">// Потребление: Active+BT: ~240mA / Light Sleep: ~0.8mA</span>
+<span class="kw">void</span> <span class="fn">enterLightSleep</span>() {
+    i2s_stop(I2S_NUM_0);
+    esp_sleep_enable_timer_wakeup(<span class="num">500</span> * <span class="num">1000</span>);          <span class="cm">// wakeup каждые 500ms</span>
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)BTN_PIN, <span class="num">0</span>); <span class="cm">// wakeup по кнопке</span>
+    esp_light_sleep_start();
+    i2s_start(I2S_NUM_0);
+}
+
+<span class="cm">// Оптимизация: CPU частота 80MHz в idle (не 240MHz)</span>
+<span class="kw">void</span> <span class="fn">setCpuFreqIdle</span>()  { setCpuFrequencyMhz(<span class="num">80</span>);  }
+<span class="kw">void</span> <span class="fn">setCpuFreqActive</span>() { setCpuFrequencyMhz(<span class="num">240</span>); }
+
+<span class="cm">// Watchdog: если BT молчит 30с — автостоп записи</span>
+<span class="tp">uint32_t</span> lastBTActivity = <span class="num">0</span>;
+<span class="kw">void</span> <span class="fn">checkWatchdog</span>() {
+    <span class="kw">if</span> (isRecording && (millis() - lastBTActivity > <span class="num">30000</span>)) {
+        isRecording = <span class="kw">false</span>;
+        digitalWrite(LED_PIN, LOW);
+    }
+}</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID ARCH -->
+<h2 id="android-arch">Android — Clean Architecture</h2>
+
+<div class="callout good">
+  <strong>🛠️ Android IDE: Android Studio Hedgehog+</strong>
+  <p>Kotlin 1.9+, Gradle 8.x, minSdk 26 (Android 8.0), targetSdk 34. Зависимости: Vosk 0.3.47, Room 2.6, Hilt 2.48, Compose BOM 2024.01, Coroutines 1.7, Kotlin Serialization.</p>
+</div>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin</span><span class="cm">// build.gradle.kts (app)</span>
+<span class="fn">dependencies</span> {
+    <span class="cm">// UI</span>
+    implementation(platform(<span class="str">"androidx.compose:compose-bom:2024.01.00"</span>))
+    implementation(<span class="str">"androidx.compose.ui:ui"</span>)
+    implementation(<span class="str">"androidx.compose.material3:material3"</span>)
+    implementation(<span class="str">"androidx.navigation:navigation-compose:2.7.5"</span>)
+    
+    <span class="cm">// Architecture</span>
+    implementation(<span class="str">"androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0"</span>)
+    implementation(<span class="str">"com.google.dagger:hilt-android:2.48"</span>)
+    kapt(<span class="str">"com.google.dagger:hilt-compiler:2.48"</span>)
+    
+    <span class="cm">// Database</span>
+    implementation(<span class="str">"androidx.room:room-runtime:2.6.1"</span>)
+    implementation(<span class="str">"androidx.room:room-ktx:2.6.1"</span>)
+    kapt(<span class="str">"androidx.room:room-compiler:2.6.1"</span>)
+    
+    <span class="cm">// ASR</span>
+    implementation(<span class="str">"com.alphacephei:vosk-android:0.3.47@aar"</span>) { isTransitive = <span class="kw">true</span> }
+    
+    <span class="cm">// Coroutines + Serialization</span>
+    implementation(<span class="str">"org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"</span>)
+    implementation(<span class="str">"org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2"</span>)
+    
+    <span class="cm">// Export</span>
+    implementation(<span class="str">"com.itextpdf:itextpdf:5.5.13.3"</span>)
+}
+
+<span class="cm">// AndroidManifest.xml permissions:</span>
+<span class="cm">// &lt;uses-permission android:name="android.permission.BLUETOOTH" /&gt;</span>
+<span class="cm">// &lt;uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /&gt;</span>
+<span class="cm">// &lt;uses-permission android:name="android.permission.BLUETOOTH_SCAN" /&gt;</span>
+<span class="cm">// &lt;uses-permission android:name="android.permission.BLUETOOTH_ADMIN" /&gt;</span></code></pre>
+
+<h3>Структура пакетов</h3>
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin / Project Structure</span>com.voicemind.app/
+├── <span class="tp">di</span>/                        <span class="cm">// Hilt DI модули</span>
+│   ├── AppModule.kt
+│   └── DatabaseModule.kt
+│
+├── <span class="tp">domain</span>/                    <span class="cm">// Бизнес-логика (чистая, без Android)</span>
+│   ├── model/
+│   │   ├── Recording.kt       <span class="cm">// data class Recording(...)</span>
+│   │   ├── StructuredNote.kt
+│   │   └── Analytics.kt
+│   ├── repository/
+│   │   └── RecordingRepository.kt  <span class="cm">// interface</span>
+│   └── usecase/
+│       ├── GetAllRecordingsUseCase.kt
+│       ├── ProcessAudioUseCase.kt
+│       └── SearchNotesUseCase.kt
+│
+├── <span class="tp">data</span>/
+│   ├── bluetooth/
+│   │   ├── BluetoothManager.kt
+│   │   └── PacketParser.kt
+│   ├── asr/
+│   │   ├── VoskRecognizer.kt
+│   │   └── VADProcessor.kt
+│   ├── nlp/
+│   │   ├── NLPPipeline.kt
+│   │   ├── KeywordExtractor.kt    <span class="cm">// TF-IDF</span>
+│   │   └── TextRankSummarizer.kt
+│   ├── database/
+│   │   ├── AppDatabase.kt
+│   │   ├── RecordingDao.kt
+│   │   └── entity/
+│   └── repository/
+│       └── RecordingRepositoryImpl.kt
+│
+└── <span class="tp">presentation</span>/
+    ├── MainActivity.kt
+    ├── theme/
+    ├── screen/
+    │   ├── home/          HomeScreen.kt + HomeViewModel.kt
+    │   ├── recording/     RecordingScreen.kt + RecordingViewModel.kt
+    │   ├── detail/        NoteDetailScreen.kt + DetailViewModel.kt
+    │   ├── search/        SearchScreen.kt + SearchViewModel.kt
+    │   └── analytics/     AnalyticsScreen.kt + AnalyticsViewModel.kt
+    └── component/
+        ├── RecordingCard.kt
+        ├── WaveformView.kt
+        └── KeywordChip.kt</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID BT -->
+<h2 id="android-bt">Android — Bluetooth Receiver</h2>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin</span><span class="kw">class</span> <span class="tp">BluetoothManager</span> @<span class="fn">Inject</span> constructor(
+    <span class="kw">private val</span> context: <span class="tp">Context</span>
+) {
+    <span class="kw">private val</span> adapter = BluetoothAdapter.getDefaultAdapter()
+    <span class="kw">private var</span> socket: <span class="tp">BluetoothSocket</span>? = <span class="kw">null</span>
+    <span class="kw">private var</span> inputStream: <span class="tp">InputStream</span>? = <span class="kw">null</span>
+    
+    <span class="cm">// SPP UUID стандартный (не менять)</span>
+    <span class="kw">private val</span> SPP_UUID = UUID.fromString(<span class="str">"00001101-0000-1000-8000-00805F9B34FB"</span>)
+    
+    <span class="kw">suspend fun</span> <span class="fn">connect</span>(deviceAddress: <span class="tp">String</span>): <span class="tp">Result</span>&lt;<span class="tp">Unit</span>&gt; = withContext(Dispatchers.IO) {
+        <span class="kw">try</span> {
+            <span class="kw">val</span> device = adapter.getRemoteDevice(deviceAddress)
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+            adapter.cancelDiscovery()
+            socket?.connect()
+            inputStream = socket?.inputStream
+            Result.success(<span class="tp">Unit</span>)
+        } <span class="kw">catch</span> (e: <span class="tp">IOException</span>) {
+            Result.failure(e)
+        }
+    }
+    
+    <span class="cm">// Flow который непрерывно эмитирует распарсенные пакеты</span>
+    <span class="kw">fun</span> <span class="fn">audioPacketFlow</span>(): <span class="tp">Flow</span>&lt;<span class="tp">AudioPacket</span>&gt; = flow {
+        <span class="kw">val</span> parser = <span class="tp">PacketParser</span>()
+        <span class="kw">val</span> readBuf = ByteArray(<span class="num">2048</span>)
+        
+        <span class="kw">while</span> (<span class="kw">true</span>) {
+            <span class="kw">val</span> bytesRead = inputStream?.read(readBuf) ?: <span class="kw">break</span>
+            <span class="kw">val</span> packets = parser.feed(readBuf, bytesRead)
+            packets.forEach { emit(it) }
+        }
+    }.flowOn(Dispatchers.IO)
+}
+
+<span class="cm">// ─── ПАРСЕР ПАКЕТОВ (state machine) ──────────────────────────</span>
+<span class="kw">class</span> <span class="tp">PacketParser</span> {
+    <span class="kw">private enum class</span> <span class="tp">State</span> { WAIT_START, READ_SEQ, READ_TYPE, READ_LEN, READ_PAYLOAD, READ_CRC }
+    <span class="kw">private var</span> state = <span class="tp">State</span>.WAIT_START
+    <span class="kw">private var</span> seq = <span class="num">0</span>; <span class="kw">private var</span> type = <span class="num">0</span>
+    <span class="kw">private var</span> expectedLen = <span class="num">0</span>; <span class="kw">private var</span> bytesRead = <span class="num">0</span>
+    <span class="kw">private val</span> headerBuf = ByteArray(<span class="num">6</span>)
+    <span class="kw">private val</span> payloadBuf = ByteArray(<span class="num">1024</span>)
+    
+    <span class="kw">fun</span> <span class="fn">feed</span>(data: ByteArray, len: <span class="tp">Int</span>): <span class="tp">List</span>&lt;<span class="tp">AudioPacket</span>&gt; {
+        <span class="kw">val</span> result = mutableListOf&lt;<span class="tp">AudioPacket</span>&gt;()
+        <span class="kw">for</span> (i <span class="kw">in</span> <span class="num">0</span> until len) {
+            <span class="kw">val</span> b = data[i].toInt() and <span class="num">0xFF</span>
+            <span class="kw">when</span> (state) {
+                <span class="tp">State</span>.WAIT_START -> <span class="kw">if</span> (b == <span class="num">0xAA</span>) state = <span class="tp">State</span>.READ_SEQ
+                <span class="tp">State</span>.READ_SEQ -> {
+                    headerBuf[bytesRead++] = b.toByte()
+                    <span class="kw">if</span> (bytesRead == <span class="num">2</span>) {
+                        seq = ((headerBuf[<span class="num">0</span>].toInt() and <span class="num">0xFF</span>) shl <span class="num">8</span>) or (headerBuf[<span class="num">1</span>].toInt() and <span class="num">0xFF</span>)
+                        bytesRead = <span class="num">0</span>; state = <span class="tp">State</span>.READ_TYPE
+                    }
+                }
+                <span class="tp">State</span>.READ_TYPE -> { type = b; state = <span class="tp">State</span>.READ_LEN }
+                <span class="tp">State</span>.READ_LEN -> {
+                    headerBuf[bytesRead++] = b.toByte()
+                    <span class="kw">if</span> (bytesRead == <span class="num">2</span>) {
+                        expectedLen = ((headerBuf[<span class="num">0</span>].toInt() and <span class="num">0xFF</span>) shl <span class="num">8</span>) or (headerBuf[<span class="num">1</span>].toInt() and <span class="num">0xFF</span>)
+                        bytesRead = <span class="num">0</span>; state = <span class="tp">State</span>.READ_PAYLOAD
+                    }
+                }
+                <span class="tp">State</span>.READ_PAYLOAD -> {
+                    payloadBuf[bytesRead++] = b.toByte()
+                    <span class="kw">if</span> (bytesRead == expectedLen) { bytesRead = <span class="num">0</span>; state = <span class="tp">State</span>.READ_CRC }
+                }
+                <span class="tp">State</span>.READ_CRC -> {
+                    <span class="cm">// Проверяем CRC</span>
+                    <span class="kw">val</span> computed = <span class="fn">crc8</span>(payloadBuf, expectedLen)
+                    <span class="kw">if</span> (computed == b.toByte() && type == <span class="num">0x01</span>) {
+                        result.add(<span class="tp">AudioPacket</span>(seq, payloadBuf.copyOf(expectedLen)))
+                    }
+                    state = <span class="tp">State</span>.WAIT_START; bytesRead = <span class="num">0</span>
+                }
+            }
+        }
+        <span class="kw">return</span> result
+    }
+    
+    <span class="kw">private fun</span> <span class="fn">crc8</span>(data: ByteArray, len: <span class="tp">Int</span>): <span class="tp">Byte</span> {
+        <span class="kw">var</span> crc = <span class="num">0</span>
+        <span class="kw">for</span> (i <span class="kw">in</span> <span class="num">0</span> until len) {
+            crc = crc xor (data[i].toInt() and <span class="num">0xFF</span>)
+            repeat(<span class="num">8</span>) { crc = <span class="kw">if</span> (crc and <span class="num">0x80</span> != <span class="num">0</span>) (crc shl <span class="num">1</span>) xor <span class="num">0x31</span> <span class="kw">else</span> crc shl <span class="num">1</span> }
+        }
+        <span class="kw">return</span> crc.toByte()
+    }
+}
+
+<span class="kw">data class</span> <span class="tp">AudioPacket</span>(<span class="kw">val</span> seq: <span class="tp">Int</span>, <span class="kw">val</span> pcmData: ByteArray)</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID ASR -->
+<h2 id="android-asr">Android — Vosk ASR</h2>
+
+<div class="callout info">
+  <strong>📦 Модель</strong>
+  <p>Скачай <strong>vosk-model-small-ru-0.22</strong> (~50MB) с alphacephei.com/vosk/models. Положи в <span class="inline-code">assets/vosk-model-small-ru-0.22/</span>. При первом запуске приложение копирует её во внутреннее хранилище (необходимо для нативной библиотеки).</p>
+</div>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin</span><span class="kw">class</span> <span class="tp">VoskRecognizer</span> @<span class="fn">Inject</span> constructor(
+    <span class="kw">@ApplicationContext private val</span> context: <span class="tp">Context</span>,
+    <span class="kw">private val</span> scope: <span class="tp">CoroutineScope</span>
+) {
+    <span class="kw">private val</span> MODEL_NAME = <span class="str">"vosk-model-small-ru-0.22"</span>
+    <span class="kw">private var</span> model: <span class="tp">Model</span>? = <span class="kw">null</span>
+    <span class="kw">private var</span> recognizer: <span class="tp">KaldiRecognizer</span>? = <span class="kw">null</span>
+    <span class="kw">private val</span> SAMPLE_RATE = <span class="num">16000.0f</span>
+    
+    <span class="kw">suspend fun</span> <span class="fn">initialize</span>(): <span class="tp">Boolean</span> = withContext(Dispatchers.IO) {
+        <span class="kw">try</span> {
+            <span class="kw">val</span> modelPath = <span class="fn">extractModelIfNeeded</span>()
+            model = <span class="tp">Model</span>(modelPath)
+            recognizer = <span class="tp">KaldiRecognizer</span>(model!!, SAMPLE_RATE).apply {
+                setWords(<span class="kw">true</span>)          <span class="cm">// включить word timestamps</span>
+                setPartialWords(<span class="kw">true</span>)   <span class="cm">// частичные результаты</span>
+                setMaxAlternatives(<span class="num">3</span>)    <span class="cm">// топ-3 варианта</span>
+            }
+            <span class="kw">true</span>
+        } <span class="kw">catch</span> (e: <span class="tp">Exception</span>) { <span class="kw">false</span> }
+    }
+    
+    <span class="cm">/**
+     * Обрабатывает PCM chunk (ByteArray, little-endian signed 16-bit)
+     * Возвращает null если нет результата, иначе RecognitionResult
+     */</span>
+    <span class="kw">fun</span> <span class="fn">processChunk</span>(pcmBytes: ByteArray): <span class="tp">RecognitionResult</span>? {
+        <span class="kw">val</span> rec = recognizer ?: <span class="kw">return null</span>
+        <span class="kw">return if</span> (rec.acceptWaveForm(pcmBytes, pcmBytes.size)) {
+            <span class="fn">parseFullResult</span>(rec.result)
+        } <span class="kw">else</span> {
+            <span class="fn">parsePartialResult</span>(rec.partialResult)
+        }
+    }
+    
+    <span class="kw">private fun</span> <span class="fn">parseFullResult</span>(json: <span class="tp">String</span>): <span class="tp">RecognitionResult</span> {
+        <span class="kw">val</span> obj = JSONObject(json)
+        <span class="kw">val</span> text = obj.optString(<span class="str">"text"</span>, <span class="str">""</span>)
+        <span class="kw">val</span> words = mutableListOf&lt;<span class="tp">WordTiming</span>&gt;()
+        obj.optJSONArray(<span class="str">"result"</span>)?.let { arr ->
+            <span class="kw">for</span> (i <span class="kw">in</span> <span class="num">0</span> until arr.length()) {
+                <span class="kw">val</span> w = arr.getJSONObject(i)
+                words.add(<span class="tp">WordTiming</span>(
+                    word  = w.getString(<span class="str">"word"</span>),
+                    start = w.getDouble(<span class="str">"start"</span>).toFloat(),
+                    end   = w.getDouble(<span class="str">"end"</span>).toFloat(),
+                    conf  = w.getDouble(<span class="str">"conf"</span>).toFloat()
+                ))
+            }
+        }
+        <span class="kw">return</span> <span class="tp">RecognitionResult</span>(isFinal = <span class="kw">true</span>, text = text, words = words)
+    }
+    
+    <span class="kw">private fun</span> <span class="fn">parsePartialResult</span>(json: <span class="tp">String</span>): <span class="tp">RecognitionResult</span>? {
+        <span class="kw">val</span> partial = JSONObject(json).optString(<span class="str">"partial"</span>, <span class="str">""</span>)
+        <span class="kw">return if</span> (partial.isNotEmpty()) <span class="tp">RecognitionResult</span>(isFinal = <span class="kw">false</span>, text = partial) <span class="kw">else null</span>
+    }
+    
+    <span class="cm">// Копирует модель из assets во внутреннее хранилище (если ещё нет)</span>
+    <span class="kw">private suspend fun</span> <span class="fn">extractModelIfNeeded</span>(): <span class="tp">String</span> = withContext(Dispatchers.IO) {
+        <span class="kw">val</span> dest = File(context.filesDir, MODEL_NAME)
+        <span class="kw">if</span> (!dest.exists()) {
+            dest.mkdirs()
+            context.assets.list(MODEL_NAME)?.forEach { file ->
+                context.assets.open(<span class="str">"$MODEL_NAME/$file"</span>).use { input ->
+                    File(dest, file).outputStream().use { input.copyTo(it) }
+                }
+            }
+        }
+        dest.absolutePath
+    }
+}
+
+<span class="kw">data class</span> <span class="tp">RecognitionResult</span>(
+    <span class="kw">val</span> isFinal: <span class="tp">Boolean</span>,
+    <span class="kw">val</span> text: <span class="tp">String</span>,
+    <span class="kw">val</span> words: <span class="tp">List</span>&lt;<span class="tp">WordTiming</span>&gt; = emptyList()
+)
+<span class="kw">data class</span> <span class="tp">WordTiming</span>(<span class="kw">val</span> word: <span class="tp">String</span>, <span class="kw">val</span> start: <span class="tp">Float</span>, <span class="kw">val</span> end: <span class="tp">Float</span>, <span class="kw">val</span> conf: <span class="tp">Float</span>)</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID VAD -->
+<h2 id="android-vad">Алгоритм VAD (Voice Activity Detection)</h2>
+
+<div class="math">
+  <div class="eq-label">Energy-based VAD</div>
+  <span class="math-var">E_frame</span> = √( (1/N) × Σᵢ xᵢ² )  — RMS энергия фрейма<br>
+  <span class="math-var">E_smooth</span> = α × E_frame + (1-α) × E_smooth_prev  — EMA сглаживание<br><br>
+  Параметры: α = <span class="math-num">0.3</span>, порог = <span class="math-num">500</span> (для 16-bit PCM), пауза = <span class="math-num">30</span> фреймов (~1с)<br><br>
+  Фрейм = <span class="math-num">512</span> сэмплов @ 16kHz = <span class="math-num">32 мс</span>. Буфер предречи = <span class="math-num">10</span> фреймов (320мс)
+</div>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin</span><span class="kw">class</span> <span class="tp">VADProcessor</span>(
+    <span class="kw">private val</span> energyThreshold: <span class="tp">Float</span> = <span class="num">500f</span>,
+    <span class="kw">private val</span> silenceFramesMax: <span class="tp">Int</span> = <span class="num">30</span>,    <span class="cm">// ~960ms до конца сегмента</span>
+    <span class="kw">private val</span> preSpeechPad: <span class="tp">Int</span> = <span class="num">10</span>          <span class="cm">// буфер перед речью</span>
+) {
+    <span class="kw">private var</span> state = <span class="tp">VADState</span>.SILENCE
+    <span class="kw">private var</span> silenceCount = <span class="num">0</span>
+    <span class="kw">private var</span> smoothedEnergy = <span class="num">0f</span>
+    <span class="kw">private val</span> EMA_ALPHA = <span class="num">0.3f</span>
+    
+    <span class="cm">// Кольцевой буфер для предречевого паддинга</span>
+    <span class="kw">private val</span> preBuffer = ArrayDeque&lt;ShortArray&gt;(preSpeechPad)
+    
+    <span class="kw">fun</span> <span class="fn">processFrame</span>(samples: ShortArray): <span class="tp">VADEvent</span> {
+        <span class="cm">// 1. Вычислить RMS энергию</span>
+        <span class="kw">val</span> rms = <span class="fn">computeRMS</span>(samples)
+        
+        <span class="cm">// 2. EMA сглаживание</span>
+        smoothedEnergy = EMA_ALPHA * rms + (<span class="num">1f</span> - EMA_ALPHA) * smoothedEnergy
+        
+        <span class="cm">// 3. State machine</span>
+        <span class="kw">return when</span> (state) {
+            <span class="tp">VADState</span>.SILENCE -> {
+                preBuffer.addLast(samples.clone())
+                <span class="kw">if</span> (preBuffer.size > preSpeechPad) preBuffer.removeFirst()
+                
+                <span class="kw">if</span> (smoothedEnergy > energyThreshold) {
+                    state = <span class="tp">VADState</span>.SPEECH
+                    silenceCount = <span class="num">0</span>
+                    <span class="kw">val</span> prePad = preBuffer.toList()
+                    preBuffer.clear()
+                    <span class="tp">VADEvent</span>.SpeechStart(prePad)
+                } <span class="kw">else</span> <span class="tp">VADEvent</span>.Silence
+            }
+            <span class="tp">VADState</span>.SPEECH -> {
+                <span class="kw">if</span> (smoothedEnergy < energyThreshold) {
+                    silenceCount++
+                    <span class="kw">if</span> (silenceCount >= silenceFramesMax) {
+                        state = <span class="tp">VADState</span>.SILENCE
+                        <span class="tp">VADEvent</span>.SpeechEnd
+                    } <span class="kw">else</span> <span class="tp">VADEvent</span>.TrailingSilence(samples)
+                } <span class="kw">else</span> {
+                    silenceCount = <span class="num">0</span>
+                    <span class="tp">VADEvent</span>.SpeechFrame(samples)
+                }
+            }
+        }
+    }
+    
+    <span class="kw">private fun</span> <span class="fn">computeRMS</span>(samples: ShortArray): <span class="tp">Float</span> {
+        <span class="kw">var</span> sumSq = <span class="num">0.0</span>
+        samples.forEach { sumSq += (it.toDouble() * it.toDouble()) }
+        <span class="kw">return</span> sqrt(sumSq / samples.size).toFloat()
+    }
+}
+
+<span class="kw">sealed class</span> <span class="tp">VADEvent</span> {
+    <span class="kw">data class</span> <span class="tp">SpeechStart</span>(<span class="kw">val</span> prePadFrames: <span class="tp">List</span>&lt;ShortArray&gt;): <span class="tp">VADEvent</span>()
+    <span class="kw">data class</span> <span class="tp">SpeechFrame</span>(<span class="kw">val</span> samples: ShortArray): <span class="tp">VADEvent</span>()
+    <span class="kw">data class</span> <span class="tp">TrailingSilence</span>(<span class="kw">val</span> samples: ShortArray): <span class="tp">VADEvent</span>()
+    <span class="kw">object</span> <span class="tp">SpeechEnd</span> : <span class="tp">VADEvent</span>()
+    <span class="kw">object</span> <span class="tp">Silence</span> : <span class="tp">VADEvent</span>()
+}</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID NLP -->
+<h2 id="android-nlp">NLP Pipeline</h2>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin</span><span class="cm">// ─── TF-IDF KEYWORD EXTRACTOR ────────────────────────────────</span>
+<span class="kw">class</span> <span class="tp">KeywordExtractor</span> {
+    <span class="kw">private val</span> STOPWORDS = setOf(
+        <span class="str">"и"</span>, <span class="str">"в"</span>, <span class="str">"на"</span>, <span class="str">"с"</span>, <span class="str">"по"</span>, <span class="str">"из"</span>, <span class="str">"что"</span>, <span class="str">"как"</span>, <span class="str">"это"</span>, <span class="str">"он"</span>,
+        <span class="str">"она"</span>, <span class="str">"мы"</span>, <span class="str">"вы"</span>, <span class="str">"они"</span>, <span class="str">"я"</span>, <span class="str">"но"</span>, <span class="str">"а"</span>, <span class="str">"же"</span>, <span class="str">"бы"</span>, <span class="str">"не"</span>,
+        <span class="str">"то"</span>, <span class="str">"да"</span>, <span class="str">"нет"</span>, <span class="str">"ну"</span>, <span class="str">"вот"</span>, <span class="str">"уже"</span>, <span class="str">"или"</span>, <span class="str">"при"</span>, <span class="str">"для"</span>,
+        <span class="str">"под"</span>, <span class="str">"над"</span>, <span class="str">"об"</span>, <span class="str">"все"</span>, <span class="str">"так"</span>, <span class="str">"тут"</span>, <span class="str">"там"</span>
+    )
+    
+    <span class="cm">/**
+     * TF-IDF для одного документа (упрощённый: IDF = 1 для всех слов в одном doc)
+     * TF(t, d) = count(t в d) / count(всех слов в d)
+     * Для многодокументного корпуса используем сохранённые IDF из БД
+     */</span>
+    <span class="kw">fun</span> <span class="fn">extractKeywords</span>(text: <span class="tp">String</span>, topN: <span class="tp">Int</span> = <span class="num">10</span>, idfMap: <span class="tp">Map</span>&lt;<span class="tp">String</span>, <span class="tp">Float</span>&gt; = emptyMap()): <span class="tp">List</span>&lt;<span class="tp">Keyword</span>&gt; {
+        <span class="kw">val</span> tokens = text.lowercase()
+            .split(Regex(<span class="str">"""[\s,.:;!?()"'\n—–]+"""</span>))
+            .filter { it.length > <span class="num">2</span> && it !<span class="kw">in</span> STOPWORDS && it.all { c -> c.isLetter() } }
+        
+        <span class="kw">val</span> totalWords = tokens.size.toFloat()
+        <span class="kw">if</span> (totalWords == <span class="num">0f</span>) <span class="kw">return</span> emptyList()
+        
+        <span class="kw">val</span> tf = tokens.groupingBy { it }.eachCount()
+            .mapValues { (_, count) -> count.toFloat() / totalWords }
+        
+        <span class="kw">return</span> tf.entries
+            .map { (word, tfScore) ->
+                <span class="kw">val</span> idf = idfMap[word] ?: <span class="num">1.0f</span>
+                <span class="tp">Keyword</span>(word, tfScore * idf, tf[word] ?: <span class="num">0</span>)
+            }
+            .sortedByDescending { it.score }
+            .take(topN)
+    }
+}
+
+<span class="cm">// ─── TEXTRANK SUMMARIZER ─────────────────────────────────────</span>
+<span class="kw">class</span> <span class="tp">TextRankSummarizer</span>(
+    <span class="kw">private val</span> damping: <span class="tp">Double</span> = <span class="num">0.85</span>,
+    <span class="kw">private val</span> iterations: <span class="tp">Int</span> = <span class="num">20</span>
+) {
+    <span class="cm">/**
+     * TextRank для извлечения ключевых предложений.
+     * 
+     * Алгоритм:
+     * 1. Разбиваем на предложения
+     * 2. Считаем матрицу схожести S[i][j] = |intersection(sᵢ, sⱼ)| / (log|sᵢ| + log|sⱼ|)
+     * 3. Нормализуем строки матрицы (→ stochastic matrix)
+     * 4. Итерируем: rank = (1-d)/N + d × Σⱼ(S[j][i] × rank[j])
+     * 5. Возвращаем топ-K предложений по рангу, в оригинальном порядке
+     */</span>
+    <span class="kw">fun</span> <span class="fn">summarize</span>(text: <span class="tp">String</span>, topK: <span class="tp">Int</span> = <span class="num">3</span>): <span class="tp">String</span> {
+        <span class="kw">val</span> sentences = text.split(Regex(<span class="str">"""[.!?]+\s*"""</span>))
+            .map { it.trim() }
+            .filter { it.split(<span class="str">" "</span>).size > <span class="num">4</span> }
+        
+        <span class="kw">if</span> (sentences.size <= topK) <span class="kw">return</span> sentences.joinToString(<span class="str">". "</span>)
+        
+        <span class="kw">val</span> N = sentences.size
+        <span class="kw">val</span> wordSets = sentences.map { it.lowercase().split(<span class="str">" "</span>).toSet() }
+        
+        <span class="cm">// Матрица схожести</span>
+        <span class="kw">val</span> sim = Array(N) { i ->
+            DoubleArray(N) { j ->
+                <span class="kw">if</span> (i == j) <span class="num">0.0</span> <span class="kw">else</span> {
+                    <span class="kw">val</span> intersection = wordSets[i].intersect(wordSets[j]).size.toDouble()
+                    <span class="kw">val</span> denom = ln(wordSets[i].size.toDouble()) + ln(wordSets[j].size.toDouble())
+                    <span class="kw">if</span> (denom > <span class="num">0</span>) intersection / denom <span class="kw">else</span> <span class="num">0.0</span>
+                }
+            }
+        }
+        
+        <span class="cm">// Нормализация строк</span>
+        <span class="kw">for</span> (i <span class="kw">in</span> <span class="num">0</span> until N) {
+            <span class="kw">val</span> rowSum = sim[i].sum()
+            <span class="kw">if</span> (rowSum > <span class="num">0</span>) sim[i].indices.forEach { j -> sim[i][j] /= rowSum }
+        }
+        
+        <span class="cm">// PageRank итерации</span>
+        <span class="kw">var</span> ranks = DoubleArray(N) { <span class="num">1.0</span> / N }
+        repeat(iterations) {
+            <span class="kw">val</span> newRanks = DoubleArray(N) { i ->
+                (<span class="num">1.0</span> - damping) / N + damping * (<span class="num">0</span> until N).sumOf { j -> sim[j][i] * ranks[j] }
+            }
+            ranks = newRanks
+        }
+        
+        <span class="cm">// Выбираем топ-K, сохраняем оригинальный порядок</span>
+        <span class="kw">val</span> topIndices = ranks.indices.sortedByDescending { ranks[it] }.take(topK).toSet()
+        <span class="kw">return</span> sentences.indices
+            .filter { it <span class="kw">in</span> topIndices }
+            .joinToString(<span class="str">". "</span>) { sentences[it] }
+    }
+}
+
+<span class="cm">// ─── NLP PIPELINE (главный класс) ─────────────────────────────</span>
+<span class="kw">class</span> <span class="tp">NLPPipeline</span> @<span class="fn">Inject</span> constructor(
+    <span class="kw">private val</span> keywordExtractor: <span class="tp">KeywordExtractor</span>,
+    <span class="kw">private val</span> summarizer: <span class="tp">TextRankSummarizer</span>
+) {
+    <span class="kw">private val</span> TASK_PATTERNS = listOf(
+        Regex(<span class="str">"""(?:нужно|необходимо|надо|следует|должн[ыо])\s+(.{5,50})"""</span>, RegexOption.IGNORE_CASE),
+        Regex(<span class="str">"""(?:сделать|подготовить|проверить|отправить|встретиться)\s+(.{5,50})"""</span>, RegexOption.IGNORE_CASE),
+        Regex(<span class="str">"""(?:договорились|решили|согласовали)\s+(?:что\s+)?(.{5,50})"""</span>, RegexOption.IGNORE_CASE)
+    )
+    
+    <span class="kw">private val</span> DATE_PATTERN = Regex(
+        <span class="str">"""(\d{1,2})[.\s/](\d{1,2})[.\s/]?(\d{2,4})?|"""</span> +
+        <span class="str">"""((?:январ|феврал|март|апрел|май|июн|июл|август|сентябр|октябр|ноябр|декабр)\w*)"""</span>,
+        RegexOption.IGNORE_CASE
+    )
+    
+    <span class="kw">private val</span> MEETING_KW  = setOf(<span class="str">"встреча"</span>, <span class="str">"переговоры"</span>, <span class="str">"договорились"</span>, <span class="str">"участник"</span>, <span class="str">"согласовали"</span>, <span class="str">"повестка"</span>)
+    <span class="kw">private val</span> LECTURE_KW  = setOf(<span class="str">"лекция"</span>, <span class="str">"тема"</span>, <span class="str">"студент"</span>, <span class="str">"рассмотрим"</span>, <span class="str">"изучаем"</span>, <span class="str">"конспект"</span>, <span class="str">"семинар"</span>)
+    <span class="kw">private val</span> INTERVIEW_KW = setOf(<span class="str">"интервью"</span>, <span class="str">"кандидат"</span>, <span class="str">"опыт"</span>, <span class="str">"расскажите"</span>, <span class="str">"вакансия"</span>, <span class="str">"должность"</span>)
+    
+    <span class="kw">fun</span> <span class="fn">process</span>(rawText: <span class="tp">String</span>): <span class="tp">StructuredNote</span> {
+        <span class="kw">val</span> keywords = keywordExtractor.extractKeywords(rawText, topN = <span class="num">15</span>)
+        <span class="kw">val</span> summary   = summarizer.summarize(rawText, topK = <span class="num">3</span>)
+        <span class="kw">val</span> tasks      = <span class="fn">extractTasks</span>(rawText)
+        <span class="kw">val</span> dates      = <span class="fn">extractDates</span>(rawText)
+        <span class="kw">val</span> type       = <span class="fn">classifyType</span>(rawText)
+        <span class="kw">val</span> title      = <span class="fn">generateTitle</span>(keywords, type)
+        
+        <span class="kw">return</span> <span class="tp">StructuredNote</span>(title, type, summary, keywords, tasks, dates, rawText)
+    }
+    
+    <span class="kw">private fun</span> <span class="fn">extractTasks</span>(text: <span class="tp">String</span>): <span class="tp">List</span>&lt;<span class="tp">String</span>&gt; =
+        TASK_PATTERNS.flatMap { pattern ->
+            pattern.findAll(text).map { it.groupValues[<span class="num">1</span>].trim() }.toList()
+        }.distinct().take(<span class="num">10</span>)
+    
+    <span class="kw">private fun</span> <span class="fn">extractDates</span>(text: <span class="tp">String</span>): <span class="tp">List</span>&lt;<span class="tp">String</span>&gt; =
+        DATE_PATTERN.findAll(text).map { it.value.trim() }.distinct().take(<span class="num">10</span>).toList()
+    
+    <span class="kw">private fun</span> <span class="fn">classifyType</span>(text: <span class="tp">String</span>): <span class="tp">ContentType</span> {
+        <span class="kw">val</span> lower = text.lowercase()
+        <span class="kw">val</span> scores = mapOf(
+            <span class="tp">ContentType</span>.MEETING   to MEETING_KW.count { it <span class="kw">in</span> lower },
+            <span class="tp">ContentType</span>.LECTURE   to LECTURE_KW.count { it <span class="kw">in</span> lower },
+            <span class="tp">ContentType</span>.INTERVIEW to INTERVIEW_KW.count { it <span class="kw">in</span> lower }
+        )
+        <span class="kw">val</span> best = scores.maxByOrNull { it.value }
+        <span class="kw">return if</span> ((best?.value ?: <span class="num">0</span>) > <span class="num">0</span>) best!!.key <span class="kw">else</span> <span class="tp">ContentType</span>.OTHER
+    }
+    
+    <span class="kw">private fun</span> <span class="fn">generateTitle</span>(keywords: <span class="tp">List</span>&lt;<span class="tp">Keyword</span>&gt;, type: <span class="tp">ContentType</span>): <span class="tp">String</span> {
+        <span class="kw">val</span> typeName = <span class="kw">when</span>(type) {
+            <span class="tp">ContentType</span>.MEETING   -> <span class="str">"Встреча"</span>
+            <span class="tp">ContentType</span>.LECTURE   -> <span class="str">"Лекция"</span>
+            <span class="tp">ContentType</span>.INTERVIEW -> <span class="str">"Интервью"</span>
+            <span class="tp">ContentType</span>.OTHER     -> <span class="str">"Запись"</span>
+        }
+        <span class="kw">val</span> topWords = keywords.take(<span class="num">2</span>).joinToString(<span class="str">", "</span>) { it.word.replaceFirstChar(Char::uppercase) }
+        <span class="kw">return if</span> (topWords.isEmpty()) <span class="str">"$typeName от ${Date()}"</span> <span class="kw">else</span> <span class="str">"$typeName: $topWords"</span>
+    }
+}
+
+<span class="kw">data class</span> <span class="tp">Keyword</span>(<span class="kw">val</span> word: <span class="tp">String</span>, <span class="kw">val</span> score: <span class="tp">Float</span>, <span class="kw">val</span> count: <span class="tp">Int</span>)
+<span class="kw">enum class</span> <span class="tp">ContentType</span> { MEETING, LECTURE, INTERVIEW, OTHER }
+<span class="kw">data class</span> <span class="tp">StructuredNote</span>(
+    <span class="kw">val</span> title: <span class="tp">String</span>, <span class="kw">val</span> type: <span class="tp">ContentType</span>, <span class="kw">val</span> summary: <span class="tp">String</span>,
+    <span class="kw">val</span> keywords: <span class="tp">List</span>&lt;<span class="tp">Keyword</span>&gt;, <span class="kw">val</span> tasks: <span class="tp">List</span>&lt;<span class="tp">String</span>&gt;,
+    <span class="kw">val</span> dates: <span class="tp">List</span>&lt;<span class="tp">String</span>&gt;, <span class="kw">val</span> rawText: <span class="tp">String</span>
+)</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID DB -->
+<h2 id="android-db">База данных — Room + SQLite</h2>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin / Room</span><span class="cm">// ─── ENTITIES ────────────────────────────────────────────────</span>
+@<span class="fn">Entity</span>(tableName = <span class="str">"recordings"</span>)
+<span class="kw">data class</span> <span class="tp">RecordingEntity</span>(
+    @<span class="fn">PrimaryKey</span>(autoGenerate = <span class="kw">true</span>) <span class="kw">val</span> id: <span class="tp">Long</span> = <span class="num">0</span>,
+    <span class="kw">val</span> title: <span class="tp">String</span>,
+    <span class="kw">val</span> dateCreated: <span class="tp">Long</span> = System.currentTimeMillis(),
+    <span class="kw">val</span> durationSeconds: <span class="tp">Int</span>,
+    <span class="kw">val</span> audioPath: <span class="tp">String</span>? = <span class="kw">null</span>,
+    <span class="kw">val</span> rawTranscript: <span class="tp">String</span>? = <span class="kw">null</span>,
+    <span class="kw">val</span> contentType: <span class="tp">String</span> = <span class="str">"OTHER"</span>
+)
+
+@<span class="fn">Entity</span>(tableName = <span class="str">"structured_notes"</span>,
+    foreignKeys = [<span class="fn">ForeignKey</span>(entity = <span class="tp">RecordingEntity</span>::<span class="kw">class</span>,
+        parentColumns = [<span class="str">"id"</span>], childColumns = [<span class="str">"recordingId"</span>], onDelete = CASCADE)])
+<span class="kw">data class</span> <span class="tp">NoteEntity</span>(
+    @<span class="fn">PrimaryKey</span>(autoGenerate = <span class="kw">true</span>) <span class="kw">val</span> id: <span class="tp">Long</span> = <span class="num">0</span>,
+    <span class="kw">val</span> recordingId: <span class="tp">Long</span>,
+    <span class="kw">val</span> noteTitle: <span class="tp">String</span>,
+    <span class="kw">val</span> summary: <span class="tp">String</span>,
+    <span class="kw">val</span> tasksJson: <span class="tp">String</span> = <span class="str">"[]"</span>,  <span class="cm">// JSON массив</span>
+    <span class="kw">val</span> datesJson: <span class="tp">String</span> = <span class="str">"[]"</span>,
+    <span class="kw">val</span> keywordsJson: <span class="tp">String</span> = <span class="str">"[]"</span>
+)
+
+@<span class="fn">Entity</span>(tableName = <span class="str">"keywords"</span>,
+    foreignKeys = [<span class="fn">ForeignKey</span>(entity = <span class="tp">RecordingEntity</span>::<span class="kw">class</span>,
+        parentColumns = [<span class="str">"id"</span>], childColumns = [<span class="str">"recordingId"</span>], onDelete = CASCADE)],
+    indices = [<span class="fn">Index</span>(<span class="str">"word"</span>), <span class="fn">Index</span>(<span class="str">"recordingId"</span>)])
+<span class="kw">data class</span> <span class="tp">KeywordEntity</span>(
+    @<span class="fn">PrimaryKey</span>(autoGenerate = <span class="kw">true</span>) <span class="kw">val</span> id: <span class="tp">Long</span> = <span class="num">0</span>,
+    <span class="kw">val</span> recordingId: <span class="tp">Long</span>,
+    <span class="kw">val</span> word: <span class="tp">String</span>,
+    <span class="kw">val</span> frequency: <span class="tp">Int</span> = <span class="num">1</span>,
+    <span class="kw">val</span> tfidfScore: <span class="tp">Float</span> = <span class="num">0f</span>
+)
+
+<span class="cm">// ─── DAOs ─────────────────────────────────────────────────────</span>
+@<span class="fn">Dao</span>
+<span class="kw">interface</span> <span class="tp">RecordingDao</span> {
+    @<span class="fn">Query</span>(<span class="str">"SELECT * FROM recordings ORDER BY date_created DESC"</span>)
+    <span class="kw">fun</span> <span class="fn">getAllFlow</span>(): <span class="tp">Flow</span>&lt;<span class="tp">List</span>&lt;<span class="tp">RecordingEntity</span>&gt;&gt;
+    
+    @<span class="fn">Insert</span>(onConflict = OnConflictStrategy.REPLACE)
+    <span class="kw">suspend fun</span> <span class="fn">insert</span>(r: <span class="tp">RecordingEntity</span>): <span class="tp">Long</span>
+    
+    @<span class="fn">Delete</span>
+    <span class="kw">suspend fun</span> <span class="fn">delete</span>(r: <span class="tp">RecordingEntity</span>)
+    
+    <span class="cm">// Полнотекстовый поиск через LIKE (для FTS5 нужна отдельная Virtual Table)</span>
+    @<span class="fn">Query</span>(<span class="str">"""SELECT * FROM recordings 
+              WHERE raw_transcript LIKE '%' || :q || '%' 
+              OR title LIKE '%' || :q || '%' 
+              ORDER BY date_created DESC"""</span>)
+    <span class="kw">suspend fun</span> <span class="fn">search</span>(q: <span class="tp">String</span>): <span class="tp">List</span>&lt;<span class="tp">RecordingEntity</span>&gt;
+    
+    @<span class="fn">Query</span>(<span class="str">"""SELECT content_type as type, COUNT(*) as count 
+              FROM recordings GROUP BY content_type ORDER BY count DESC LIMIT 3"""</span>)
+    <span class="kw">suspend fun</span> <span class="fn">getTopTypes</span>(): <span class="tp">List</span>&lt;<span class="tp">TypeCount</span>&gt;
+    
+    @<span class="fn">Query</span>(<span class="str">"SELECT COALESCE(SUM(duration_seconds), 0) FROM recordings"</span>)
+    <span class="kw">suspend fun</span> <span class="fn">getTotalDuration</span>(): <span class="tp">Long</span>
+    
+    @<span class="fn">Query</span>(<span class="str">"SELECT COUNT(*) FROM recordings"</span>)
+    <span class="kw">suspend fun</span> <span class="fn">getCount</span>(): <span class="tp">Int</span>
+}
+
+@<span class="fn">Dao</span>
+<span class="kw">interface</span> <span class="tp">KeywordDao</span> {
+    @<span class="fn">Query</span>(<span class="str">"""SELECT word, SUM(frequency) as total FROM keywords 
+              GROUP BY word ORDER BY total DESC LIMIT :n"""</span>)
+    <span class="kw">suspend fun</span> <span class="fn">getTopGlobalKeywords</span>(n: <span class="tp">Int</span> = <span class="num">20</span>): <span class="tp">List</span>&lt;<span class="tp">WordFreq</span>&gt;
+    
+    @<span class="fn">Insert</span>(onConflict = OnConflictStrategy.REPLACE)
+    <span class="kw">suspend fun</span> <span class="fn">insertAll</span>(keywords: <span class="tp">List</span>&lt;<span class="tp">KeywordEntity</span>&gt;)
+}
+
+<span class="cm">// ─── DATABASE ─────────────────────────────────────────────────</span>
+@<span class="fn">Database</span>(entities = [<span class="tp">RecordingEntity</span>::<span class="kw">class</span>, <span class="tp">NoteEntity</span>::<span class="kw">class</span>, <span class="tp">KeywordEntity</span>::<span class="kw">class</span>],
+    version = <span class="num">1</span>, exportSchema = <span class="kw">true</span>)
+<span class="kw">abstract class</span> <span class="tp">AppDatabase</span> : RoomDatabase() {
+    <span class="kw">abstract fun</span> <span class="fn">recordingDao</span>(): <span class="tp">RecordingDao</span>
+    <span class="kw">abstract fun</span> <span class="fn">keywordDao</span>(): <span class="tp">KeywordDao</span>
+}
+
+<span class="kw">data class</span> <span class="tp">TypeCount</span>(<span class="kw">val</span> type: <span class="tp">String</span>, <span class="kw">val</span> count: <span class="tp">Int</span>)
+<span class="kw">data class</span> <span class="tp">WordFreq</span>(<span class="kw">val</span> word: <span class="tp">String</span>, <span class="kw">val</span> total: <span class="tp">Int</span>)</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANDROID UI -->
+<h2 id="android-ui">Compose UI — Экраны</h2>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin / Jetpack Compose</span><span class="cm">// ─── RECORDING SCREEN ────────────────────────────────────────</span>
+@<span class="fn">Composable</span>
+<span class="kw">fun</span> <span class="fn">RecordingScreen</span>(viewModel: <span class="tp">RecordingViewModel</span> = hiltViewModel()) {
+    <span class="kw">val</span> state <span class="kw">by</span> viewModel.uiState.collectAsStateWithLifecycle()
+    
+    <span class="fn">Column</span>(modifier = Modifier.fillMaxSize().padding(<span class="num">16</span>.dp)) {
+        
+        <span class="cm">// Анимированный индикатор записи</span>
+        <span class="kw">val</span> pulseAnim <span class="kw">by</span> rememberInfiniteTransition().animateFloat(
+            initialValue = <span class="num">1f</span>, targetValue = <span class="num">1.15f</span>,
+            animationSpec = infiniteRepeatable(tween(<span class="num">600</span>), RepeatMode.Reverse)
+        )
+        
+        <span class="fn">Box</span>(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().height(<span class="num">200</span>.dp)) {
+            <span class="kw">if</span> (state.isRecording) {
+                <span class="fn">Box</span>(Modifier.size((<span class="num">80</span> * pulseAnim).dp)
+                    .background(<span class="tp">Color</span>.Red.copy(alpha = <span class="num">0.2f</span>), CircleShape))
+            }
+            <span class="fn">IconButton</span>(onClick = { viewModel.toggleRecording() },
+                modifier = Modifier.size(<span class="num">80</span>.dp).background(
+                    <span class="kw">if</span> (state.isRecording) <span class="tp">Color</span>.Red <span class="kw">else</span> <span class="tp">MaterialTheme</span>.colorScheme.primary, CircleShape)) {
+                <span class="fn">Icon</span>(<span class="kw">if</span> (state.isRecording) <span class="tp">Icons</span>.Default.Stop <span class="kw">else</span> <span class="tp">Icons</span>.Default.Mic,
+                    tint = <span class="tp">Color</span>.White, modifier = Modifier.size(<span class="num">36</span>.dp), contentDescription = <span class="kw">null</span>)
+            }
+        }
+        
+        <span class="cm">// Статус BT + батарея устройства</span>
+        <span class="fn">DeviceStatusBar</span>(btConnected = state.btConnected, batteryLevel = state.deviceBattery)
+        
+        <span class="cm">// Текущий транскрипт в реальном времени</span>
+        <span class="fn">Card</span>(modifier = Modifier.fillMaxWidth().weight(<span class="num">1f</span>).padding(top = <span class="num">16</span>.dp)) {
+            <span class="fn">LazyColumn</span>(modifier = Modifier.padding(<span class="num">12</span>.dp)) {
+                items(state.transcriptLines) { line ->
+                    <span class="fn">Text</span>(line.text,
+                        color = <span class="kw">if</span> (line.isFinal) <span class="tp">MaterialTheme</span>.colorScheme.onSurface
+                                <span class="kw">else</span> <span class="tp">MaterialTheme</span>.colorScheme.onSurfaceVariant,
+                        style = <span class="tp">MaterialTheme</span>.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = <span class="num">2</span>.dp))
+                }
+            }
+        }
+        
+        <span class="cm">// Кнопка ручной остановки</span>
+        <span class="kw">if</span> (state.isRecording) {
+            <span class="fn">Button</span>(onClick = { viewModel.stopAndProcess() },
+                modifier = Modifier.fillMaxWidth().padding(top = <span class="num">12</span>.dp),
+                colors = <span class="fn">ButtonDefaults</span>.buttonColors(containerColor = <span class="tp">Color</span>.Red)) {
+                <span class="fn">Text</span>(<span class="str">"Остановить и структурировать"</span>)
+            }
+        }
+    }
+}
+
+<span class="cm">// ─── NOTE DETAIL SCREEN ───────────────────────────────────────</span>
+@<span class="fn">Composable</span>
+<span class="kw">fun</span> <span class="fn">NoteDetailScreen</span>(noteId: <span class="tp">Long</span>, viewModel: <span class="tp">DetailViewModel</span> = hiltViewModel()) {
+    <span class="kw">val</span> note <span class="kw">by</span> viewModel.note.collectAsStateWithLifecycle()
+    
+    <span class="fn">LazyColumn</span>(modifier = Modifier.fillMaxSize().padding(<span class="num">16</span>.dp), verticalArrangement = Arrangement.spacedBy(<span class="num">12</span>.dp)) {
+        
+        item { <span class="fn">Text</span>(note?.title ?: <span class="str">""</span>, style = <span class="tp">MaterialTheme</span>.typography.headlineMedium) }
+        
+        <span class="cm">// Тип контента + теги</span>
+        item {
+            <span class="fn">Row</span>(horizontalArrangement = Arrangement.spacedBy(<span class="num">8</span>.dp)) {
+                note?.keywords?.take(<span class="num">5</span>)?.forEach { kw ->
+                    <span class="fn">SuggestionChip</span>(onClick = {}, label = { <span class="fn">Text</span>(kw.word) })
+                }
+            }
+        }
+        
+        <span class="cm">// Саммари</span>
+        item {
+            <span class="fn">NoteSection</span>(title = <span class="str">"Краткое изложение"</span>, icon = <span class="tp">Icons</span>.Default.Summarize) {
+                <span class="fn">Text</span>(note?.summary ?: <span class="str">""</span>, style = <span class="tp">MaterialTheme</span>.typography.bodyMedium)
+            }
+        }
+        
+        <span class="cm">// Задачи</span>
+        <span class="kw">if</span> (!note?.tasks.isNullOrEmpty()) {
+            item {
+                <span class="fn">NoteSection</span>(title = <span class="str">"Задачи (${note?.tasks?.size})"</span>, icon = <span class="tp">Icons</span>.Default.CheckCircle) {
+                    note?.tasks?.forEach { task ->
+                        <span class="fn">Row</span>(verticalAlignment = Alignment.Top, modifier = Modifier.padding(vertical = <span class="num">4</span>.dp)) {
+                            <span class="fn">Icon</span>(<span class="tp">Icons</span>.Default.ArrowRight, <span class="kw">null</span>, modifier = Modifier.size(<span class="num">16</span>.dp))
+                            <span class="fn">Text</span>(task, modifier = Modifier.padding(start = <span class="num">4</span>.dp))
+                        }
+                    }
+                }
+            }
+        }
+        
+        <span class="cm">// Кнопки экспорта</span>
+        item {
+            <span class="fn">Row</span>(horizontalArrangement = Arrangement.spacedBy(<span class="num">8</span>.dp)) {
+                <span class="fn">OutlinedButton</span>(onClick = { viewModel.exportTxt() }) { <span class="fn">Text</span>(<span class="str">"TXT"</span>) }
+                <span class="fn">OutlinedButton</span>(onClick = { viewModel.exportPdf() }) { <span class="fn">Text</span>(<span class="str">"PDF"</span>) }
+                <span class="fn">OutlinedButton</span>(onClick = { viewModel.share() }) { <span class="fn">Text</span>(<span class="str">"Поделиться"</span>) }
+            }
+        }
+    }
+}</code></pre>
+
+<!-- ═══════════════════════════════════════════════ ANALYTICS -->
+<h2 id="android-analytics">Аналитика</h2>
+
+<pre><code class="language-kotlin"><span class="lang-label">Kotlin</span>@<span class="fn">HiltViewModel</span>
+<span class="kw">class</span> <span class="tp">AnalyticsViewModel</span> @<span class="fn">Inject</span> constructor(
+    <span class="kw">private val</span> repo: <span class="tp">RecordingRepository</span>
+) : ViewModel() {
+    
+    <span class="kw">val</span> analytics: <span class="tp">StateFlow</span>&lt;<span class="tp">AnalyticsData</span>&gt; = flow {
+        <span class="kw">val</span> count = repo.getCount()
+        <span class="kw">val</span> totalSec = repo.getTotalDuration()
+        <span class="kw">val</span> topTypes = repo.getTopTypes()
+        <span class="kw">val</span> topWords = repo.getTopGlobalKeywords(<span class="num">20</span>)
+        
+        <span class="cm">// Оценка сэкономленного времени:
+        // Среднее время ручного конспектирования = 3× длительности записи
+        // Время автоматической обработки = ~1-2 минуты (Vosk + NLP)</span>
+        <span class="kw">val</span> timeSavedMin = ((totalSec * <span class="num">2L</span>) / <span class="num">60</span>)  <span class="cm">// 2x = разница</span>
+        
+        emit(<span class="tp">AnalyticsData</span>(
+            totalRecordings = count,
+            totalDurationMin = (totalSec / <span class="num">60</span>).toInt(),
+            timeSavedMin = timeSavedMin.toInt(),
+            topContentTypes = topTypes,
+            topKeywords = topWords.take(<span class="num">10</span>)
+        ))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), <span class="tp">AnalyticsData</span>())
+}
+
+<span class="kw">data class</span> <span class="tp">AnalyticsData</span>(
+    <span class="kw">val</span> totalRecordings: <span class="tp">Int</span> = <span class="num">0</span>,
+    <span class="kw">val</span> totalDurationMin: <span class="tp">Int</span> = <span class="num">0</span>,
+    <span class="kw">val</span> timeSavedMin: <span class="tp">Int</span> = <span class="num">0</span>,
+    <span class="kw">val</span> topContentTypes: <span class="tp">List</span>&lt;<span class="tp">TypeCount</span>&gt; = emptyList(),
+    <span class="kw">val</span> topKeywords: <span class="tp">List</span>&lt;<span class="tp">WordFreq</span>&gt; = emptyList()
+)</code></pre>
+
+<!-- ═══════════════════════════════════════════════ MATH AUDIO -->
+<h2 id="math-audio">Математика — Обработка аудио</h2>
+
+<div class="math">
+  <div class="eq-label">Параметры аудио потока</div>
+  fs = <span class="math-num">16 000</span> Гц — частота дискретизации<br>
+  bits = <span class="math-num">16</span> — разрядность (int16, range: -32768 .. +32767)<br>
+  channels = <span class="math-num">1</span> (mono)<br><br>
+  <span class="math-var">R_raw</span> = fs × bits/8 × channels = <span class="math-num">16000 × 2 × 1</span> = <span class="math-result">32 000 байт/с = 256 кбит/с</span><br><br>
+  BT SPP пропускная способность: ~300–700 кбит/с → <span class="math-result">достаточно с запасом ≥1.5×</span>
+</div>
+
+<div class="math">
+  <div class="eq-label">Задержка (latency) сквозной цепочки</div>
+  <span class="math-var">t_dma</span> = DMA_BUF_LEN / fs = 512 / 16000 = <span class="math-num">32 мс</span> (один DMA буфер)<br>
+  <span class="math-var">t_bt</span> ≈ <span class="math-num">20–40 мс</span> (BT Classic латентность)<br>
+  <span class="math-var">t_parse</span> ≈ <span class="math-num">1–2 мс</span> (парсинг пакета на CPU)<br>
+  <span class="math-var">t_vosk</span> ≈ <span class="math-num">50–150 мс</span> (Vosk partial result на Snapdragon 855+)<br><br>
+  <span class="math-var">t_total</span> = t_dma + t_bt + t_parse + t_vosk ≈ <span class="math-result">103–224 мс</span> (субсекундная, неощутима)
+</div>
+
+<div class="math">
+  <div class="eq-label">VAD порог — расчёт</div>
+  Типичная речь: RMS ≈ 1000–8000 (16-bit PCM)<br>
+  Тишина/фон: RMS ≈ 100–400<br>
+  Порог: <span class="math-var">E_thresh</span> = <span class="math-num">500</span> — золотая середина<br><br>
+  EMA α = 0.3 даёт TC = <span class="math-num">1</span>/ln(1/0.7) × 32мс ≈ <span class="math-result">89 мс</span> временная константа
+</div>
+
+<!-- ═══════════════════════════════════════════════ MATH TFIDF -->
+<h2 id="math-tfidf">Математика — TF-IDF и TextRank</h2>
+
+<div class="math">
+  <div class="eq-label">TF-IDF</div>
+  TF(t, d) = count(t в документе d) / |d|<br>
+  IDF(t, D) = log( |D| / (1 + |{d ∈ D : t ∈ d}|) ) + 1<br>
+  TF-IDF(t, d, D) = TF(t,d) × IDF(t,D)<br><br>
+  При одном документе: IDF = 1 для всех слов → используем только TF как baseline<br>
+  При накоплении базы: вычисляем IDF по всему корпусу в SQLite агрегацией
+</div>
+
+<div class="math">
+  <div class="eq-label">TextRank (адаптированный PageRank)</div>
+  Схожесть предложений: sim(sᵢ, sⱼ) = |words(sᵢ) ∩ words(sⱼ)| / (log|sᵢ| + log|sⱼ|)<br><br>
+  Матрица W нормализована по строкам: Wᵢⱼ = sim(sᵢ, sⱼ) / Σₖ sim(sᵢ, sₖ)<br><br>
+  Итерация PageRank:<br>
+  WS(sᵢ) = (1-d)/N + d × Σⱼ∈In(sᵢ) [ Wⱼᵢ × WS(sⱼ) ]<br><br>
+  d = 0.85 (коэф. демпфирования), N = число предложений<br>
+  Сходимость: 15–25 итераций, ε &lt; 0.0001
+</div>
+
+<!-- ═══════════════════════════════════════════════ MATH POWER -->
+<h2 id="math-power">Математика — Энергетический бюджет</h2>
+
+<table>
+  <tr><th>Компонент</th><th>Ток (мА)</th><th>Режим</th></tr>
+  <tr><td><strong>ESP32 (CPU + WiFi off)</strong></td><td>80–100</td><td>Active, BT Classic</td></tr>
+  <tr><td><strong>ESP32 BT Classic TX</strong></td><td>+130–150</td><td>При передаче</td></tr>
+  <tr><td><strong>ICS-43434 MEMS mic</strong></td><td>1.4</td><td>Всегда при записи</td></tr>
+  <tr><td><strong>WS2812B LED (status)</strong></td><td>5–20</td><td>Один пиксель ~20mA full</td></tr>
+  <tr><td><strong>TP4056 quiescent</strong></td><td>0.55</td><td>Idle</td></tr>
+  <tr><td><strong>IP5306 LDO</strong></td><td>~8 (quiescent)</td><td>При нагрузке</td></tr>
+  <tr><td><strong>ИТОГО активный режим</strong></td><td style="color:#3fb950"><strong>~240 мА</strong></td><td>Запись + BT TX</td></tr>
+</table>
+
+<div class="math">
+  <div class="eq-label">Время работы</div>
+  <span class="math-var">C</span> = <span class="math-num">2000</span> мАч (Li-Po, реальная ёмкость ~85% = 1700 мАч)<br>
+  <span class="math-var">I_avg</span> = <span class="math-num">240</span> мА (активный) + <span class="math-num">0.8</span> мА (light sleep между пакетами)<br>
+  <span class="math-var">I_effective</span> ≈ <span class="math-num">220</span> мА (с учётом 15% времени в light sleep)<br><br>
+  <span class="math-var">T</span> = C / I_effective = 1700 / 220 ≈ <span class="math-result">7.7 часов</span><br><br>
+  С аккумулятором 2500 мАч: 2125 / 220 ≈ <span class="math-result">9.7 часов ✅</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════ IDE SETUP -->
+<h2 id="ide-setup">IDE, Окружение, Запуск</h2>
+
+<h3>ESP32 Прошивка</h3>
+<div class="card">
+  <strong>1. Установи VS Code</strong> → расширение PlatformIO IDE<br><br>
+  <strong>2. Создай проект:</strong><br>
+  PlatformIO: New Project → Board: <span class="inline-code">Espressif ESP32 Dev Module</span> → Framework: <span class="inline-code">Arduino</span><br><br>
+  <strong>3. platformio.ini:</strong>
+  <pre style="margin:8px 0 0; padding:12px;"><code>[env:esp32dev]
+platform = espressif32
+board = esp32doit-devkit-v1
+framework = arduino
+monitor_speed = 115200
+upload_speed = 921600
+build_flags =
+  -DCORE_DEBUG_LEVEL=0
+  -DCONFIG_BT_ENABLED=1</code></pre>
+  <br><strong>4. Флашь:</strong> <span class="inline-code">pio run --target upload</span> или кнопка Upload в PlatformIO
+</div>
+
+<h3>Android App</h3>
+<div class="card">
+  <strong>1. Android Studio Hedgehog (2023.1.1) или новее</strong><br><br>
+  <strong>2. Добавь Vosk AAR в settings.gradle:</strong><br>
+  <pre style="margin:8px 0; padding:12px;"><code>maven { url "https://alphacephei.com/maven/" }</code></pre>
+  <strong>3. Скачай и распакуй модель Vosk:</strong><br>
+  <span class="inline-code">wget https://alphacephei.com/vosk/models/vosk-model-small-ru-0.22.zip</span><br>
+  Распакуй в <span class="inline-code">app/src/main/assets/vosk-model-small-ru-0.22/</span><br><br>
+  <strong>4. minSdk = 26</strong> (Android 8.0+, требование Vosk)<br><br>
+  <strong>5. Разрешения Bluetooth:</strong> на Android 12+ нужны <span class="inline-code">BLUETOOTH_CONNECT</span> + <span class="inline-code">BLUETOOTH_SCAN</span>
+</div>
+
+<h3>Опциональный LLM (Qwen2.5-0.5B)</h3>
+<div class="callout idea">
+  <strong>💡 Если хочешь настоящий LLM на устройстве</strong>
+  <p>Используй <strong>MLC LLM</strong> (mlc-ai.github.io). Модель Qwen2.5-0.5B квантованная (q4f16) = ~350MB. Требует устройство с ≥4GB RAM и GPU Adreno 640+. Для большинства телефонов 2021+ подойдёт. Инструкция: <span class="inline-code">pip install mlc-llm</span>, конвертируй модель, добавь .so в jniLibs. Это заменит rule-based NLP на настоящее понимание контекста.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════ BOM -->
+<h2 id="bom">BOM — Список деталей</h2>
+
+<table>
+  <tr><th>Компонент</th><th>Модель</th><th>Цена (AliExpress)</th><th>Количество</th></tr>
+  <tr><td><strong>MCU</strong></td><td>ESP32-WROOM-32D модуль</td><td>~$3</td><td>1</td></tr>
+  <tr><td><strong>Микрофон</strong></td><td>ICS-43434 breakout board</td><td>~$2</td><td>1</td></tr>
+  <tr><td><strong>Аккумулятор</strong></td><td>Li-Po 3.7V 2000mAh (503759)</td><td>~$4</td><td>1</td></tr>
+  <tr><td><strong>Зарядник</strong></td><td>TP4056 USB-C модуль</td><td>~$0.5</td><td>1</td></tr>
+  <tr><td><strong>Управление питанием</strong></td><td>IP5306 (или MT3608 LDO)</td><td>~$0.8</td><td>1</td></tr>
+  <tr><td><strong>Кнопка</strong></td><td>6×6×4мм тактовая</td><td>~$0.1</td><td>1</td></tr>
+  <tr><td><strong>LED индикатор</strong></td><td>WS2812B-2020 (SMD)</td><td>~$0.5</td><td>1</td></tr>
+  <tr><td><strong>Делитель бат.</strong></td><td>100кОм резисторы 0402</td><td>~$0.05</td><td>2</td></tr>
+  <tr><td><strong>Конденсаторы</strong></td><td>100nF, 10uF (развязка питания)</td><td>~$0.2</td><td>4</td></tr>
+  <tr><td><strong>PCB</strong></td><td>2-слойная ~60×35мм (JLCPCB)</td><td>~$5 (5шт)</td><td>1</td></tr>
+  <tr><td><strong>Корпус</strong></td><td>3D-печать PLA/PETG</td><td>~$3 (нить)</td><td>1</td></tr>
+  <tr><td style="border-top: 2px solid var(--border)"><strong>ИТОГО</strong></td><td></td><td><strong style="color:#3fb950">~$19 / устройство</strong></td><td></td></tr>
+</table>
+
+<div class="callout info">
+  <strong>📐 Размеры</strong>
+  <p>PCB: 55×30мм. Корпус: 62×37×14мм. Крепление: клипса-зажим на лацкан или ланьяр. Отверстие под микрофон: ∅1.5мм + сетка.</p>
+</div>
+
+<hr>
+<p style="font-size:13px; text-align:center; color: var(--border); padding: 20px 0;">VoiceMind Technical Reference — Версия 1.0 | ESP32 + Android + Vosk + TextRank</p>
+
+<script>
+  const links = document.querySelectorAll('nav a');
+  const sections = document.querySelectorAll('h2[id]');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+  links.forEach(l => l.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(l.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+  }));
+</script>
+</body>
+</html>

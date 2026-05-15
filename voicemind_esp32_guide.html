@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceMind — ESP32 + INMP441 Полный гайд</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Unbounded:wght@400;700;900&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #080c10;
+  --bg2: #0d1117;
+  --bg3: #161b22;
+  --bg4: #21262d;
+  --border: #21262d;
+  --border2: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --green: #00ff88;
+  --amber: #ffb800;
+  --red: #ff4444;
+  --orange: #ff6b2b;
+  --pink: #f472b6;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+  --display: 'Unbounded', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.7;
+  display: flex;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+nav {
+  width: 280px;
+  min-height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.nav-header {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #0d1117, #0a0f14);
+}
+.nav-logo {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-logo::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+.nav-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
+
+.nav-section { padding: 14px 20px 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--border2); }
+nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px; font-size: 13px; color: var(--muted);
+  text-decoration: none; transition: all .15s;
+  border-left: 2px solid transparent;
+  font-family: var(--sans);
+}
+nav a:hover { color: var(--text); background: var(--bg3); }
+nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,212,255,.05); }
+nav a .step-num {
+  width: 20px; height: 20px; border-radius: 4px;
+  background: var(--bg4); font-family: var(--mono); font-size: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-weight: 700;
+}
+nav a.active .step-num { background: rgba(0,212,255,.2); color: var(--accent); }
+nav a.done .step-num { background: rgba(0,255,136,.15); color: var(--green); }
+
+/* ── MAIN ─────────────────────────────────────────────── */
+main { flex: 1; max-width: 960px; padding: 48px 52px; overflow-x: hidden; }
+
+.hero {
+  margin-bottom: 48px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--text), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 12px;
+}
+.hero p { color: var(--muted); max-width: 600px; }
+
+h2 {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 56px 0 20px;
+  scroll-margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+h2 .h2-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+h3 { font-size: 15px; font-weight: 600; color: var(--text); margin: 28px 0 12px; }
+h4 { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--muted); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+p { color: var(--muted); margin-bottom: 12px; line-height: 1.75; }
+strong { color: var(--text); font-weight: 600; }
+em { color: var(--accent); font-style: normal; }
+
+/* ── CODE ─────────────────────────────────────────────── */
+.code-block {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+.code-title { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.code-lang {
+  font-family: var(--mono); font-size: 10px;
+  padding: 2px 8px; border-radius: 4px;
+  background: rgba(0,212,255,.1); color: var(--accent);
+  text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+}
+pre {
+  padding: 20px 20px;
+  overflow-x: auto;
+  margin: 0;
+}
+code {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.kw  { color: #ff7b72; }
+.fn  { color: #d2a8ff; }
+.str { color: #a5d6ff; }
+.num { color: #79c0ff; }
+.cm  { color: #6e7681; font-style: italic; }
+.tp  { color: #ffa657; }
+.pp  { color: #ff9580; }
+.def { color: #00d4ff; }
+
+/* ── WIRING DIAGRAM ───────────────────────────────────── */
+.wiring-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+.wire-card {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.wire-card-title {
+  padding: 10px 16px;
+  background: var(--bg3);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.wire-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  font-size: 13px;
+}
+.wire-row:last-child { border-bottom: none; }
+.pin { font-family: var(--mono); font-weight: 700; min-width: 50px; }
+.wire-line {
+  flex: 1;
+  height: 2px;
+  border-radius: 1px;
+  position: relative;
+}
+.wire-line::after {
+  content: '→';
+  position: absolute;
+  right: -8px;
+  top: -9px;
+  font-size: 12px;
+}
+.gpio { font-family: var(--mono); color: var(--green); font-weight: 700; }
+
+/* ── CARDS ────────────────────────────────────────────── */
+.callout {
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  border-left: 3px solid;
+  display: flex;
+  gap: 12px;
+}
+.callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.callout-body { flex: 1; }
+.callout-body strong { display: block; margin-bottom: 4px; font-size: 13px; }
+.callout-body p { margin: 0; font-size: 13.5px; }
+.callout.warn { background: rgba(255,184,0,.07); border-color: var(--amber); }
+.callout.info { background: rgba(0,212,255,.07); border-color: var(--accent); }
+.callout.danger { background: rgba(255,68,68,.07); border-color: var(--red); }
+.callout.good { background: rgba(0,255,136,.07); border-color: var(--green); }
+.callout.idea { background: rgba(124,58,237,.1); border-color: var(--accent2); }
+
+/* ── ROADMAP ──────────────────────────────────────────── */
+.roadmap { margin: 24px 0; }
+.roadmap-step {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 8px;
+}
+.roadmap-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border2);
+}
+.step-circle {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 14px; font-weight: 900;
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+.step-body { flex: 1; padding-bottom: 24px; }
+.step-title { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 6px; }
+.step-desc { color: var(--muted); font-size: 13.5px; }
+.step-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.tag {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px;
+}
+.tag.blue { background: rgba(0,212,255,.12); color: var(--accent); border: 1px solid rgba(0,212,255,.2); }
+.tag.green { background: rgba(0,255,136,.1); color: var(--green); border: 1px solid rgba(0,255,136,.2); }
+.tag.amber { background: rgba(255,184,0,.1); color: var(--amber); border: 1px solid rgba(255,184,0,.2); }
+.tag.purple { background: rgba(124,58,237,.15); color: #a78bfa; border: 1px solid rgba(124,58,237,.3); }
+.tag.red { background: rgba(255,68,68,.1); color: var(--red); border: 1px solid rgba(255,68,68,.2); }
+
+/* ── LEARN GRID ───────────────────────────────────────── */
+.learn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.learn-card {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 18px 20px;
+  transition: border-color .2s;
+}
+.learn-card:hover { border-color: var(--accent); }
+.learn-card-icon { font-size: 24px; margin-bottom: 10px; }
+.learn-card-title { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 6px; }
+.learn-card-level {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 3px; margin-bottom: 8px; display: inline-block;
+}
+.level-must { background: rgba(255,68,68,.15); color: var(--red); }
+.level-imp { background: rgba(255,184,0,.12); color: var(--amber); }
+.level-good { background: rgba(0,255,136,.1); color: var(--green); }
+.learn-card p { font-size: 12.5px; margin: 0; }
+
+/* ── ARCH BANNER ──────────────────────────────────────── */
+.arch-banner {
+  background: linear-gradient(135deg, rgba(0,212,255,.05), rgba(124,58,237,.05));
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 20px 0;
+}
+.arch-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.arch-node {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.arch-node.highlight { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,.08); }
+.arch-node.phone { border-color: var(--accent2); color: #a78bfa; background: rgba(124,58,237,.1); }
+.arch-arrow { color: var(--border2); font-size: 18px; }
+
+/* ── TABLE ────────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+th { background: var(--bg3); color: var(--muted); font-weight: 600; text-align: left; padding: 10px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border2); font-family: var(--mono); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--muted); font-size: 13.5px; }
+td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--green); font-weight: 700; }
+tr:last-child td { border: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+
+/* ── MATH ─────────────────────────────────────────────── */
+.math-box {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent2);
+  border-radius: 0 10px 10px 0;
+  padding: 16px 20px;
+  margin: 14px 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 2;
+}
+.math-box .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.mv { color: #d2a8ff; }
+.mn { color: #79c0ff; }
+.mr { color: var(--green); font-weight: 700; }
+
+/* ── SCROLLBAR ────────────────────────────────────────── */
+nav::-webkit-scrollbar { width: 3px; }
+nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* ── HR ───────────────────────────────────────────────── */
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+@media (max-width: 900px) {
+  nav { display: none; }
+  main { padding: 24px 20px; }
+  .wiring-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="nav-header">
+    <div class="nav-logo">VoiceMind ESP32</div>
+    <div class="nav-sub">INMP441 + Bluetooth + Vosk</div>
+  </div>
+
+  <div class="nav-section">Старт</div>
+  <a href="#arch" class="done"><span class="step-num">!</span>Архитектура (читай первым)</a>
+  <a href="#wiring"><span class="step-num">1</span>Подключение INMP441</a>
+  <a href="#platformio"><span class="step-num">2</span>Настройка PlatformIO</a>
+
+  <div class="nav-section">Прошивка</div>
+  <a href="#code-i2s"><span class="step-num">3</span>I2S + микрофон</a>
+  <a href="#code-bt"><span class="step-num">4</span>Bluetooth SPP</a>
+  <a href="#code-main"><span class="step-num">5</span>Главный файл (main.cpp)</a>
+  <a href="#code-flash"><span class="step-num">6</span>Прошивка и отладка</a>
+
+  <div class="nav-section">Алгоритмы</div>
+  <a href="#algorithms"><span class="step-num">7</span>Что и зачем изучать</a>
+  <a href="#math"><span class="step-num">8</span>Математика</a>
+  <a href="#vosk-note"><span class="step-num">9</span>Vosk — где работает</a>
+  <a href="#roadmap"><span class="step-num">10</span>Полный роадмап</a>
+</nav>
+
+<main>
+
+<div class="hero">
+  <div class="hero-label">// VoiceMind — ESP32 + INMP441 — Полный гайд</div>
+  <h1>Прошивка,<br>подключение,<br>алгоритмы</h1>
+  <p>Ты уже сделал главное — PlatformIO стоит, ESP32 подключён. Теперь пошагово: от провода до работающего аудиопотока через Bluetooth.</p>
+</div>
+
+<!-- ═══════════════════════════════ ARCH WARNING -->
+<h2 id="arch">
+  <span class="h2-icon" style="background:rgba(255,68,68,.15)">⚡</span>
+  Сначала пойми архитектуру — это критично
+</h2>
+
+<div class="callout danger">
+  <div class="callout-icon">🚨</div>
+  <div class="callout-body">
+    <strong>VOSK НЕ ЗАПУСКАЕТСЯ НА ESP32!</strong>
+    <p>ESP32 имеет 520KB RAM и 240MHz. Vosk (даже small) требует ~200MB RAM и ARM Cortex уровня смартфона. <strong>ESP32 — только микрофон + Bluetooth</strong>. Vosk запускается на Android-телефоне.</p>
+  </div>
+</div>
+
+<div class="arch-banner">
+  <strong style="font-size:13px;">Правильная архитектура системы:</strong>
+  <div class="arch-flow">
+    <div class="arch-node highlight">🎙 INMP441</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node highlight">ESP32<br><span style="font-size:10px;font-weight:400">I2S драйвер</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node highlight">BT SPP<br><span style="font-size:10px;font-weight:400">PCM 16kHz</span></div>
+    <div class="arch-arrow">───</div>
+    <div class="arch-node phone">📱 Android<br><span style="font-size:10px;font-weight:400">Воздух (BT)</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node phone">Vosk ASR<br><span style="font-size:10px;font-weight:400">офлайн</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node phone">NLP →<br><span style="font-size:10px;font-weight:400">Заметка</span></div>
+  </div>
+</div>
+
+<p><strong>ESP32 делает 3 вещи:</strong> читает аудио с микрофона через I2S → конвертирует в 16-bit PCM → шлёт по Bluetooth на телефон. Всё. Vosk, TextRank, SQLite — это Android.</p>
+
+<!-- ═══════════════════════════════ WIRING -->
+<h2 id="wiring">
+  <span class="h2-icon" style="background:rgba(0,255,136,.1)">🔌</span>
+  Шаг 1 — Подключение INMP441 к ESP32
+</h2>
+
+<div class="callout info">
+  <div class="callout-icon">ℹ️</div>
+  <div class="callout-body">
+    <strong>INMP441 vs ICS-43434</strong>
+    <p>INMP441 — это тоже I2S MEMS микрофон. Выдаёт 24-бит данные в 32-бит словах, выровненных влево (MSB). Питание: только 3.3V (не 5V — убьёшь микрофон). Всенаправленный, SNR 61 dB, частотный диапазон 60–15000 Гц.</p>
+  </div>
+</div>
+
+<div class="wiring-grid">
+  <div class="wire-card">
+    <div class="wire-card-title">INMP441 → ESP32 (пины)</div>
+    <div class="wire-row">
+      <span class="pin" style="color:#ff7b72">VDD</span>
+      <div class="wire-line" style="background:linear-gradient(90deg,#ff7b72,#ff7b72)"></div>
+      <span class="gpio">3.3V</span>
+      <span style="font-size:11px;color:var(--muted)">🔴 красный</span>
+    </div>
+    <div class="wire-row">
+      <span class="pin" style="color:#8b949e">GND</span>
+      <div class="wire-line" style="background:var(--muted)"></div>
+      <span class="gpio">GND</span>
+      <span style="font-size:11px;color:var(--muted)">⚫ чёрный</span>
+    </div>
+    <div class="wire-row">
+      <span class="pin" style="color:#d2a8ff">SD</span>
+      <div class="wire-line" style="background:#d2a8ff"></div>
+      <span class="gpio">GPIO 22</span>
+      <span style="font-size:11px;color:var(--muted)">🟣 фиол.</span>
+    </div>
+    <div class="wire-row">
+      <span class="pin" style="color:#ffa657">WS</span>
+      <div class="wire-line" style="background:#ffa657"></div>
+      <span class="gpio">GPIO 25</span>
+      <span style="font-size:11px;color:var(--muted)">🟠 оранж.</span>
+    </div>
+    <div class="wire-row">
+      <span class="pin" style="color:#79c0ff">SCK</span>
+      <div class="wire-line" style="background:#79c0ff"></div>
+      <span class="gpio">GPIO 26</span>
+      <span style="font-size:11px;color:var(--muted)">🔵 синий</span>
+    </div>
+    <div class="wire-row">
+      <span class="pin" style="color:#8b949e">L/R</span>
+      <div class="wire-line" style="background:var(--muted)"></div>
+      <span class="gpio">GND</span>
+      <span style="font-size:11px;color:var(--muted)">⚫ (левый канал)</span>
+    </div>
+  </div>
+
+  <div class="wire-card">
+    <div class="wire-card-title">Пины ESP32 DevKit (визуально)</div>
+    <div style="padding:12px 16px; font-family:var(--mono); font-size:12px; line-height:2.2;">
+      <div style="display:flex;justify-content:space-between; border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:4px;">
+        <span style="color:var(--muted)">LEFT SIDE</span>
+        <span style="color:var(--muted)">RIGHT SIDE</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:4px;align-items:center;font-size:11px;">
+        <span style="color:#ff7b72;text-align:right">3V3 ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GND</span>
+        <span style="color:var(--muted);text-align:right">EN ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO23</span>
+        <span style="color:var(--muted);text-align:right">VP ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO22</span>
+        <span style="color:var(--muted);text-align:right">VN ●</span><span style="color:var(--border2)">══</span><span style="color:#d2a8ff">● <strong>GPIO22←SD</strong></span>
+        <span style="color:var(--muted);text-align:right">GPIO34 ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO1</span>
+        <span style="color:var(--muted);text-align:right">GPIO35 ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO3</span>
+        <span style="color:var(--muted);text-align:right">GPIO32 ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO21</span>
+        <span style="color:var(--muted);text-align:right">GPIO33 ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GND</span>
+        <span style="color:var(--muted);text-align:right">GPIO25 ●</span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO19</span>
+        <span style="color:#ffa657;text-align:right"><strong>GPIO25←WS ●</strong></span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO18</span>
+        <span style="color:#79c0ff;text-align:right"><strong>GPIO26←SCK ●</strong></span><span style="color:var(--border2)">══</span><span style="color:var(--muted)">● GPIO5</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <strong>Частые ошибки при подключении</strong>
+    <p>1) Не перепутай WS и SCK — одинаково выглядят, но разные сигналы. 2) L/R <strong>обязательно</strong> на GND, иначе тишина. 3) Только 3.3V питание. 4) Если используешь макетную плату — длинные провода к SCK создают помехи, делай их короткими (&lt;5см).</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PLATFORMIO -->
+<h2 id="platformio">
+  <span class="h2-icon" style="background:rgba(255,107,43,.15)">⚙️</span>
+  Шаг 2 — Настройка PlatformIO
+</h2>
+
+<p>Открой файл <strong>platformio.ini</strong> (он уже у тебя в проекте) и замени содержимое:</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-title">platformio.ini</span>
+    <span class="code-lang">INI</span>
+  </div>
+  <pre><code><span class="cm">; VoiceMind ESP32 — конфигурация проекта</span>
+[env:esp32dev]
+platform  = espressif32
+board     = esp32doit-devkit-v1
+framework = arduino
+
+<span class="cm">; Скорость монитора</span>
+monitor_speed  = 115200
+upload_speed   = 921600
+
+<span class="cm">; Флаги компилятора</span>
+build_flags =
+  -DCORE_DEBUG_LEVEL=0
+  -DBOARD_HAS_PSRAM=0
+  -DARDUINO_ESP32_DEV=1
+
+<span class="cm">; Библиотеки (BluetoothSerial встроена в ESP32 Arduino Core)</span>
+<span class="cm">; driver/i2s.h тоже встроена — ничего дополнительно устанавливать не нужно</span>
+lib_deps =</code></pre>
+</div>
+
+<div class="callout good">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Хорошая новость</strong>
+    <p>Для I2S и Bluetooth Classic (SPP) никаких внешних библиотек не нужно — всё встроено в ESP32 Arduino Core. PlatformIO скачает его автоматически при первой компиляции.</p>
+  </div>
+</div>
+
+<p>Структура файлов которая должна у тебя получиться:</p>
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-title">Структура проекта</span>
+    <span class="code-lang">TREE</span>
+  </div>
+  <pre><code>VoiceMind/
+├── <span class="fn">platformio.ini</span>          <span class="cm">← уже есть</span>
+└── src/
+    ├── <span class="def">main.cpp</span>            <span class="cm">← главный файл (напишем)</span>
+    ├── <span class="def">i2s_mic.h</span>           <span class="cm">← I2S драйвер (напишем)</span>
+    ├── <span class="def">bt_transport.h</span>      <span class="cm">← Bluetooth протокол (напишем)</span>
+    └── <span class="def">config.h</span>            <span class="cm">← все константы</span></code></pre>
+</div>
+
+<!-- ═══════════════════════════════ CODE I2S -->
+<h2 id="code-i2s">
+  <span class="h2-icon" style="background:rgba(124,58,237,.15)">🎙️</span>
+  Шаг 3 — I2S драйвер для INMP441
+</h2>
+
+<div class="callout idea">
+  <div class="callout-icon">🧠</div>
+  <div class="callout-body">
+    <strong>Что такое I2S и почему он нужен</strong>
+    <p>I2S (Inter-IC Sound) — это цифровой протокол для передачи аудио между чипами. INMP441 выдаёт звук не как аналог через АЦП, а как цифровой поток: 3 провода — тактирование (SCK), сигнал выбора канала (WS/LRCK) и данные (SD). ESP32 имеет встроенный аппаратный I2S контроллер с DMA — это значит аудио пишется в память автоматически, без участия CPU.</p>
+  </div>
+</div>
+
+<h3>Файл: src/config.h</h3>
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-title">src/config.h — все константы проекта</span>
+    <span class="code-lang">C++</span>
+  </div>
+  <pre><code><span class="pp">#pragma once</span>
+<span class="pp">#include</span> <span class="str">"Arduino.h"</span>
+
+<span class="cm">// ─── I2S Пины (INMP441) ───────────────────────────────────────────</span>
+<span class="pp">#define</span> <span class="def">I2S_WS_PIN</span>    <span class="num">25</span>   <span class="cm">// Word Select / LRCLK</span>
+<span class="pp">#define</span> <span class="def">I2S_SCK_PIN</span>   <span class="num">26</span>   <span class="cm">// Bit Clock / BCLK</span>
+<span class="pp">#define</span> <span class="def">I2S_SD_PIN</span>    <span class="num">22</span>   <span class="cm">// Serial Data</span>
+
+<span class="cm">// ─── GPIO ─────────────────────────────────────────────────────────</span>
+<span class="pp">#define</span> <span class="def">BTN_PIN</span>       <span class="num">0</span>    <span class="cm">// Кнопка BOOT — используем как запись</span>
+<span class="pp">#define</span> <span class="def">LED_PIN</span>       <span class="num">2</span>    <span class="cm">// Встроенный синий LED на большинстве DevKit</span>
+<span class="pp">#define</span> <span class="def">BATT_ADC_PIN</span>  <span class="num">34</span>   <span class="cm">// АЦП батареи (input only, нет pull-up)</span>
+
+<span class="cm">// ─── Аудио параметры ──────────────────────────────────────────────</span>
+<span class="pp">#define</span> <span class="def">SAMPLE_RATE</span>   <span class="num">16000</span>  <span class="cm">// Гц — оптимально для Vosk (16kHz mono)</span>
+<span class="pp">#define</span> <span class="def">DMA_BUF_LEN</span>   <span class="num">512</span>    <span class="cm">// сэмплов в одном DMA буфере (32мс)</span>
+<span class="pp">#define</span> <span class="def">DMA_BUF_CNT</span>   <span class="num">8</span>      <span class="cm">// количество DMA буферов в очереди</span>
+
+<span class="cm">// ─── Bluetooth ────────────────────────────────────────────────────</span>
+<span class="pp">#define</span> <span class="def">BT_DEVICE_NAME</span> <span class="str">"VoiceMind-01"</span>  <span class="cm">// Имя в списке BT устройств</span>
+<span class="pp">#define</span> <span class="def">PKT_MAX_PAYLOAD</span> <span class="num">1024</span>            <span class="cm">// Макс. байт payload пакета</span>
+<span class="pp">#define</span> <span class="def">HEARTBEAT_MS</span>   <span class="num">1000</span>            <span class="cm">// Интервал keepalive (мс)</span>
+
+<span class="cm">// ─── Пакетные типы ────────────────────────────────────────────────</span>
+<span class="pp">#define</span> <span class="def">PKT_AUDIO</span>     <span class="num">0x01</span>
+<span class="pp">#define</span> <span class="def">PKT_STATUS</span>    <span class="num">0x05</span>
+<span class="pp">#define</span> <span class="def">PKT_HEARTBEAT</span> <span class="num">0x06</span>
+<span class="pp">#define</span> <span class="def">PKT_START_BYTE</span><span class="num">0xAA</span></code></pre>
+</div>
+
+<h3>Файл: src/i2s_mic.h</h3>
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-title">src/i2s_mic.h — драйвер микрофона</span>
+    <span class="code-lang">C++</span>
+  </div>
+  <pre><code><span class="pp">#pragma once</span>
+<span class="pp">#include</span> <span class="str">"config.h"</span>
+<span class="pp">#include</span> <span class="str">"driver/i2s.h"</span>
+
+<span class="cm">/*
+ * I2S MEMS Microphone Driver для INMP441
+ *
+ * INMP441 особенности:
+ *  - Выдаёт 24-битные данные в 32-битных словах
+ *  - Данные ВЫРОВНЕНЫ ВЛЕВО (MSB first): [D23 D22 ... D0 | 0 0 0 0 0 0 0 0]
+ *  - Для получения int16: сдвигаем вправо на 16 бит
+ *  - Если L/R = GND → LEFT channel. L/R = 3.3V → RIGHT channel.
+ */</span>
+
+<span class="kw">namespace</span> <span class="tp">I2SMic</span> {
+
+<span class="cm">// Инициализация I2S контроллера ESP32</span>
+<span class="kw">bool</span> <span class="fn">begin</span>() {
+    i2s_config_t i2s_config = {
+        .mode            = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+        .sample_rate     = SAMPLE_RATE,
+        .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,  <span class="cm">// INMP441 → 32-бит слова</span>
+        .channel_format  = I2S_CHANNEL_FMT_ONLY_LEFT,  <span class="cm">// L/R на GND → левый</span>
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+        .dma_buf_count   = DMA_BUF_CNT,
+        .dma_buf_len     = DMA_BUF_LEN,
+        .use_apll        = <span class="kw">false</span>,  <span class="cm">// Audio PLL — для точности, но не нужно</span>
+        .tx_desc_auto_clear = <span class="kw">false</span>,
+        .fixed_mclk      = <span class="num">0</span>
+    };
+
+    i2s_pin_config_t pin_config = {
+        .bck_io_num   = I2S_SCK_PIN,
+        .ws_io_num    = I2S_WS_PIN,
+        .data_out_num = I2S_PIN_NO_CHANGE,  <span class="cm">// TX не нужен</span>
+        .data_in_num  = I2S_SD_PIN
+    };
+
+    esp_err_t err = i2s_driver_install(I2S_NUM_0, &i2s_config, <span class="num">0</span>, NULL);
+    <span class="kw">if</span> (err != ESP_OK) {
+        Serial.printf(<span class="str">"[I2S] driver_install failed: %d\n"</span>, err);
+        <span class="kw">return false</span>;
+    }
+
+    err = i2s_set_pin(I2S_NUM_0, &pin_config);
+    <span class="kw">if</span> (err != ESP_OK) {
+        Serial.printf(<span class="str">"[I2S] set_pin failed: %d\n"</span>, err);
+        <span class="kw">return false</span>;
+    }
+
+    <span class="cm">// Явно задаём тактирование (необходимо для стабильности)</span>
+    i2s_set_clk(I2S_NUM_0, SAMPLE_RATE, I2S_BITS_PER_SAMPLE_32BIT, I2S_CHANNEL_MONO);
+
+    Serial.println(<span class="str">"[I2S] Microphone INMP441 initialized OK"</span>);
+    <span class="kw">return true</span>;
+}
+
+<span class="cm">/*
+ * Читает один DMA-буфер из I2S (DMA_BUF_LEN сэмплов = 512)
+ *
+ * rawBuf    — выходной буфер для RAW 32-bit данных
+ * pcmBuf    — выходной буфер для 16-bit PCM (готово для Vosk/Bluetooth)
+ * maxSamples — размер буферов
+ *
+ * Возвращает количество прочитанных сэмплов (обычно DMA_BUF_LEN)
+ *
+ * АЛГОРИТМ КОНВЕРТАЦИИ:
+ *   INMP441 raw word (32 bit):
+ *   [31..8] = 24-бит данные (MSB aligned)  [7..0] = 0x00
+ *
+ *   Шаг 1: интерпретируем как int32_t (знаковое)
+ *   Шаг 2: >> 16 → получаем 16-bit со знаком (обрезаем младшие 16 нулей)
+ *
+ *   Почему >> 16, а не >> 8?
+ *   INMP441: 24-bit данные НАЧИНАЮТСЯ с бита 31 (MSB).
+ *   Биты 31-8 = данные. Биты 7-0 = нули.
+ *   (int32_t)raw >> 16 сдвигает данные в позицию бит 15-0 → int16_t.
+ */</span>
+<span class="kw">size_t</span> <span class="fn">read</span>(<span class="kw">int32_t</span>* rawBuf, <span class="kw">int16_t</span>* pcmBuf, <span class="kw">size_t</span> maxSamples) {
+    <span class="kw">size_t</span> bytesRead = <span class="num">0</span>;
+    
+    <span class="cm">// portMAX_DELAY = ждём бесконечно пока DMA не заполнится</span>
+    i2s_read(I2S_NUM_0,
+             rawBuf,
+             maxSamples * <span class="kw">sizeof</span>(<span class="kw">int32_t</span>),
+             &bytesRead,
+             portMAX_DELAY);
+    
+    <span class="kw">size_t</span> samplesRead = bytesRead / <span class="kw">sizeof</span>(<span class="kw">int32_t</span>);
+    
+    <span class="cm">// Конвертация 32-bit → 16-bit PCM</span>
+    <span class="kw">for</span> (<span class="kw">size_t</span> i = <span class="num">0</span>; i < samplesRead; i++) {
+        <span class="cm">// Знаковый сдвиг вправо — сохраняет знаковый бит</span>
+        pcmBuf[i] = (<span class="kw">int16_t</span>)((<span class="kw">int32_t</span>)rawBuf[i] >> <span class="num">16</span>);
+    }
+    
+    <span class="kw">return</span> samplesRead;
+}
+
+<span class="cm">// Остановка I2S (для light sleep)</span>
+<span class="kw">void</span> <span class="fn">suspend</span>() { i2s_stop(I2S_NUM_0); }
+<span class="kw">void</span> <span class="fn">resume</span>()  { i2s_start(I2S_NUM_0); }
+
+} <span class="cm">// namespace I2SMic</span></code></pre>
+</div>
+
+<!-- ═══════════════════════════════ CODE BT -->
+<h2 id="code-bt">
+  <span class="h2-icon" style="background:rgba(0,212,255,.1)">📡</span>
+  Шаг 4 — Bluetooth транспорт
+</h2>
+
+<div class="callout info">
+  <div class="callout-icon">ℹ️</div>
+  <div class="callout-body">
+    <strong>Почему BT Classic SPP, а не BLE?</strong>
+    <p>BLE (Bluetooth Low Energy) имеет MTU ~512 байт и throughput ~100 кбит/с. Наш аудиопоток = 256 кбит/с — BLE не справится! BT Classic SPP (Serial Port Profile) даёт 300–700 кбит/с, что достаточно с запасом.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-title">src/bt_transport.h — протокол передачи</span>
+    <span class="code-lang">C++</span>
+  </div>
+  <pre><code><span class="pp">#pragma once</span>
+<span class="pp">#include</span> <span class="str">"config.h"</span>
+<span class="pp">#include</span> <span class="str">"BluetoothSerial.h"</span>
+
+<span class="cm">/*
+ * Протокол пакетов VoiceMind Transport v1
+ *
+ * Формат каждого пакета:
+ * ┌────────┬──────────┬────────┬──────────┬──────────────┬───────┐
+ * │ 0xAA   │ SEQ[2]   │ TYPE   │ LEN[2]   │ PAYLOAD[LEN] │ CRC8  │
+ * │ 1 байт │ 2 байта  │ 1 байт │ 2 байта  │ 0..1024 байт │ 1 байт│
+ * └────────┴──────────┴────────┴──────────┴──────────────┴───────┘
+ * Всего overhead: 7 байт на пакет
+ *
+ * CRC-8 (полином 0x31, Dallas/Maxim) считается по байтам 0..N-2
+ */</span>
+
+<span class="kw">namespace</span> <span class="tp">BTTransport</span> {
+
+BluetoothSerial SerialBT;
+<span class="kw">static uint16_t</span> seqNum = <span class="num">0</span>;
+
+<span class="cm">// ─── CRC-8 (Dallas / Maxim) ──────────────────────────────────────</span>
+<span class="cm">// Полином: P(x) = x^8 + x^5 + x^4 + 1 = 0x31</span>
+<span class="cm">// Применяется к ВСЕМ байтам пакета ДО CRC (header + payload)</span>
+<span class="kw">static uint8_t</span> <span class="fn">crc8</span>(<span class="kw">const uint8_t</span>* data, <span class="kw">size_t</span> len) {
+    <span class="kw">uint8_t</span> crc = <span class="num">0x00</span>;
+    <span class="kw">for</span> (<span class="kw">size_t</span> i = <span class="num">0</span>; i < len; i++) {
+        crc ^= data[i];
+        <span class="kw">for</span> (<span class="kw">int</span> bit = <span class="num">0</span>; bit < <span class="num">8</span>; bit++) {
+            <span class="kw">if</span> (crc & <span class="num">0x80</span>) crc = (crc << <span class="num">1</span>) ^ <span class="num">0x31</span>;
+            <span class="kw">else</span>             crc = (crc << <span class="num">1</span>);
+        }
+    }
+    <span class="kw">return</span> crc;
+}
+
+<span class="cm">// Буфер для одного пакета: 1(start) + 2(seq) + 1(type) + 2(len) + 1024(payload) + 1(crc)</span>
+<span class="kw">static uint8_t</span> _pktBuf[<span class="num">7</span> + PKT_MAX_PAYLOAD + <span class="num">1</span>];
+
+<span class="cm">// ─── Инициализация BT ────────────────────────────────────────────</span>
+<span class="kw">bool</span> <span class="fn">begin</span>() {
+    <span class="kw">if</span> (!SerialBT.begin(BT_DEVICE_NAME)) {
+        Serial.println(<span class="str">"[BT] Failed to start Bluetooth!"</span>);
+        <span class="kw">return false</span>;
+    }
+    Serial.printf(<span class="str">"[BT] Device '%s' is discoverable\n"</span>, BT_DEVICE_NAME);
+    <span class="kw">return true</span>;
+}
+
+<span class="kw">bool</span> <span class="fn">isConnected</span>() { <span class="kw">return</span> SerialBT.hasClient(); }
+
+<span class="cm">// ─── Отправка пакета ─────────────────────────────────────────────</span>
+<span class="kw">static void</span> <span class="fn">sendPacket</span>(<span class="kw">uint8_t</span> type, <span class="kw">const uint8_t</span>* payload, <span class="kw">uint16_t</span> payloadLen) {
+    <span class="kw">if</span> (!SerialBT.hasClient()) <span class="kw">return</span>;
+    
+    <span class="cm">// Собираем заголовок</span>
+    _pktBuf[<span class="num">0</span>] = PKT_START_BYTE;
+    _pktBuf[<span class="num">1</span>] = (seqNum >> <span class="num">8</span>) & <span class="num">0xFF</span>;   <span class="cm">// SEQ high byte (big-endian)</span>
+    _pktBuf[<span class="num">2</span>] = seqNum & <span class="num">0xFF</span>;           <span class="cm">// SEQ low byte</span>
+    _pktBuf[<span class="num">3</span>] = type;
+    _pktBuf[<span class="num">4</span>] = (payloadLen >> <span class="num">8</span>) & <span class="num">0xFF</span>; <span class="cm">// LEN high byte</span>
+    _pktBuf[<span class="num">5</span>] = payloadLen & <span class="num">0xFF</span>;        <span class="cm">// LEN low byte</span>
+    
+    <span class="cm">// Копируем payload</span>
+    memcpy(&_pktBuf[<span class="num">6</span>], payload, payloadLen);
+    
+    <span class="cm">// Считаем CRC по всему (заголовок + payload)</span>
+    <span class="kw">uint16_t</span> totalBeforeCRC = <span class="num">6</span> + payloadLen;
+    _pktBuf[totalBeforeCRC] = <span class="fn">crc8</span>(_pktBuf, totalBeforeCRC);
+    
+    <span class="cm">// Отправляем всё одним блоком</span>
+    SerialBT.write(_pktBuf, totalBeforeCRC + <span class="num">1</span>);
+    seqNum++;
+}
+
+<span class="cm">// ─── Аудио данные ────────────────────────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">sendAudio</span>(<span class="kw">const int16_t</span>* pcm, <span class="kw">size_t</span> samples) {
+    <span class="fn">sendPacket</span>(PKT_AUDIO,
+               (<span class="kw">const uint8_t</span>*)pcm,
+               (<span class="kw">uint16_t</span>)(samples * <span class="kw">sizeof</span>(<span class="kw">int16_t</span>)));
+}
+
+<span class="cm">// ─── Статус (батарея, режим) ─────────────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">sendStatus</span>(<span class="kw">uint8_t</span> battPct, <span class="kw">bool</span> isRec) {
+    <span class="kw">uint8_t</span> payload[<span class="num">3</span>] = { battPct, (<span class="kw">uint8_t</span>)isRec, <span class="num">0x01</span> }; <span class="cm">// v1</span>
+    <span class="fn">sendPacket</span>(PKT_STATUS, payload, <span class="kw">sizeof</span>(payload));
+}
+
+<span class="cm">// ─── Heartbeat (keepalive каждую секунду) ────────────────────────</span>
+<span class="kw">void</span> <span class="fn">sendHeartbeat</span>() {
+    <span class="kw">uint8_t</span> dummy = <span class="num">0</span>;
+    <span class="fn">sendPacket</span>(PKT_HEARTBEAT, &dummy, <span class="num">1</span>);
+}
+
+} <span class="cm">// namespace BTTransport</span></code></pre>
+</div>
+
+<!-- ═══════════════════════════════ CODE MAIN -->
+<h2 id="code-main">
+  <span class="h2-icon" style="background:rgba(0,255,136,.1)">🚀</span>
+  Шаг 5 — Главный файл main.cpp
+</h2>
+
+<p>Это сердце прошивки. Здесь всё связывается вместе: I2S читает аудио, BT отправляет, кнопка управляет, LED сигнализирует.</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-title">src/main.cpp — полная прошивка VoiceMind</span>
+    <span class="code-lang">C++</span>
+  </div>
+  <pre><code><span class="pp">#include</span> <span class="str">"Arduino.h"</span>
+<span class="pp">#include</span> <span class="str">"config.h"</span>
+<span class="pp">#include</span> <span class="str">"i2s_mic.h"</span>
+<span class="pp">#include</span> <span class="str">"bt_transport.h"</span>
+<span class="pp">#include</span> <span class="str">"esp_sleep.h"</span>
+
+<span class="cm">// ─── ГЛОБАЛЬНОЕ СОСТОЯНИЕ ─────────────────────────────────────────</span>
+<span class="kw">volatile bool</span> gIsRecording   = <span class="kw">false</span>;  <span class="cm">// volatile: изменяется в прерывании</span>
+<span class="kw">volatile bool</span> gBtnPressed    = <span class="kw">false</span>;
+<span class="kw">uint32_t</span>      gLastHeartbeat = <span class="num">0</span>;
+<span class="kw">uint32_t</span>      gLastBtActivity= <span class="num">0</span>;
+
+<span class="cm">// Аудио буферы (статические — не в стеке, нет риска переполнения)</span>
+<span class="kw">static int32_t</span> rawBuf[DMA_BUF_LEN];   <span class="cm">// 32-bit сырые данные с I2S (2048 байт)</span>
+<span class="kw">static int16_t</span> pcmBuf[DMA_BUF_LEN];   <span class="cm">// 16-bit PCM для передачи  (1024 байт)</span>
+
+<span class="cm">// ─── ПРЕРЫВАНИЕ КНОПКИ ───────────────────────────────────────────</span>
+<span class="cm">// IRAM_ATTR — функция хранится в IRAM, выполняется быстро даже при cache miss</span>
+<span class="kw">void</span> IRAM_ATTR <span class="fn">onButtonISR</span>() {
+    gBtnPressed = <span class="kw">true</span>;  <span class="cm">// Только флаг! Обработка в loop()</span>
+}
+
+<span class="cm">// ─── ЧТЕНИЕ БАТАРЕИ ──────────────────────────────────────────────</span>
+<span class="cm">/*
+ * GPIO34 — ADC1 CH6 (12-bit, 0-4095 = 0..3.3V)
+ * Делитель напряжения: R1=100kΩ, R2=100kΩ
+ *   V_adc = V_bat × R2/(R1+R2) = V_bat / 2
+ *   V_bat = V_adc × 2
+ * Li-Po: полная = 4.2V, пустая = 3.0V
+ * Берём 8 замеров и усредняем (убираем шум АЦП)
+ */</span>
+<span class="kw">uint8_t</span> <span class="fn">readBatteryPercent</span>() {
+    <span class="kw">uint32_t</span> sum = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i < <span class="num">8</span>; i++) sum += analogRead(BATT_ADC_PIN);
+    <span class="kw">float</span> v_adc = (sum / <span class="num">8.0f</span>) * (<span class="num">3.3f</span> / <span class="num">4095.0f</span>);
+    <span class="kw">float</span> v_bat = v_adc * <span class="num">2.0f</span>;
+    <span class="kw">float</span> pct   = (v_bat - <span class="num">3.0f</span>) / (<span class="num">4.2f</span> - <span class="num">3.0f</span>) * <span class="num">100.0f</span>;
+    <span class="kw">return</span> (<span class="kw">uint8_t</span>)constrain(pct, <span class="num">0</span>, <span class="num">100</span>);
+}
+
+<span class="cm">// ─── ИНДИКАЦИЯ LED ───────────────────────────────────────────────</span>
+<span class="cm">// Паттерны мигания: они не блокируют loop (используем millis)</span>
+<span class="kw">void</span> <span class="fn">updateLED</span>() {
+    <span class="kw">uint32_t</span> now = millis();
+    <span class="kw">if</span> (gIsRecording) {
+        <span class="cm">// Запись: быстрое мигание 4 Гц</span>
+        digitalWrite(LED_PIN, (now / <span class="num">125</span>) % <span class="num">2</span>);
+    } <span class="kw">else if</span> (BTTransport::isConnected()) {
+        <span class="cm">// Подключён, не пишем: медленное мигание 0.5 Гц</span>
+        digitalWrite(LED_PIN, (now / <span class="num">1000</span>) % <span class="num">2</span>);
+    } <span class="kw">else</span> {
+        <span class="cm">// Нет подключения: очень редко пикаем</span>
+        digitalWrite(LED_PIN, (now % <span class="num">3000</span>) < <span class="num">100</span> ? HIGH : LOW);
+    }
+}
+
+<span class="cm">// ─── WATCHDOG: автостоп если BT молчит 30с ───────────────────────</span>
+<span class="kw">void</span> <span class="fn">checkWatchdog</span>() {
+    <span class="kw">if</span> (gIsRecording && !BTTransport::isConnected()) {
+        <span class="kw">if</span> (millis() - gLastBtActivity > <span class="num">30000</span>) {
+            Serial.println(<span class="str">"[WDG] BT timeout — stopping recording"</span>);
+            gIsRecording = <span class="kw">false</span>;
+        }
+    }
+}
+
+<span class="cm">// ─── SETUP ───────────────────────────────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">setup</span>() {
+    Serial.begin(<span class="num">115200</span>);
+    Serial.println(<span class="str">"\n\n=== VoiceMind Firmware v1.0 ==="</span>);
+    
+    <span class="cm">// GPIO</span>
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(BTN_PIN, INPUT_PULLUP);
+    
+    <span class="cm">// Прерывание на кнопку: FALLING = нажатие (HIGH→LOW)</span>
+    attachInterrupt(digitalPinToInterrupt(BTN_PIN), onButtonISR, FALLING);
+    
+    <span class="cm">// Инициализация I2S микрофона</span>
+    <span class="kw">if</span> (!I2SMic::begin()) {
+        Serial.println(<span class="str">"[ERR] I2S init failed! Check wiring."</span>);
+        <span class="cm">// Мигаем быстро — ошибка</span>
+        <span class="kw">while</span>(<span class="kw">true</span>) { digitalWrite(LED_PIN, !digitalRead(LED_PIN)); delay(<span class="num">100</span>); }
+    }
+    
+    <span class="cm">// Инициализация Bluetooth</span>
+    <span class="kw">if</span> (!BTTransport::begin()) {
+        Serial.println(<span class="str">"[ERR] BT init failed!"</span>);
+        <span class="kw">while</span>(<span class="kw">true</span>) { digitalWrite(LED_PIN, !digitalRead(LED_PIN)); delay(<span class="num">200</span>); }
+    }
+    
+    Serial.println(<span class="str">"[OK] VoiceMind ready!"</span>);
+    Serial.printf(<span class="str">"[OK] BT name: %s\n"</span>, BT_DEVICE_NAME);
+    Serial.println(<span class="str">"[OK] Press BTN to start recording"</span>);
+    
+    gLastBtActivity = millis();
+}
+
+<span class="cm">// ─── LOOP ────────────────────────────────────────────────────────</span>
+<span class="kw">void</span> <span class="fn">loop</span>() {
+    
+    <span class="cm">// 1. Обработка нажатия кнопки (из ISR)</span>
+    <span class="kw">if</span> (gBtnPressed) {
+        gBtnPressed = <span class="kw">false</span>;
+        delay(<span class="num">50</span>);  <span class="cm">// debounce 50мс</span>
+        gIsRecording = !gIsRecording;
+        Serial.printf(<span class="str">"[BTN] Recording: %s\n"</span>, gIsRecording ? <span class="str">"ON"</span> : <span class="str">"OFF"</span>);
+        
+        <span class="kw">if</span> (BTTransport::isConnected()) {
+            BTTransport::sendStatus(<span class="fn">readBatteryPercent</span>(), gIsRecording);
+        }
+    }
+    
+    <span class="cm">// 2. Heartbeat (каждую секунду когда подключён)</span>
+    <span class="kw">if</span> (BTTransport::isConnected() && (millis() - gLastHeartbeat > HEARTBEAT_MS)) {
+        BTTransport::sendHeartbeat();
+        gLastHeartbeat = millis();
+        gLastBtActivity = millis();
+    }
+    
+    <span class="cm">// 3. Watchdog</span>
+    <span class="fn">checkWatchdog</span>();
+    
+    <span class="cm">// 4. LED индикация</span>
+    <span class="fn">updateLED</span>();
+    
+    <span class="cm">// 5. Аудио — главный путь данных</span>
+    <span class="kw">if</span> (gIsRecording && BTTransport::isConnected()) {
+        
+        <span class="cm">// Читаем DMA буфер (БЛОКИРУЮЩИЙ вызов: ждём ~32мс до заполнения)</span>
+        <span class="kw">size_t</span> samples = I2SMic::read(rawBuf, pcmBuf, DMA_BUF_LEN);
+        
+        <span class="kw">if</span> (samples > <span class="num">0</span>) {
+            <span class="cm">// Отправляем по Bluetooth</span>
+            BTTransport::sendAudio(pcmBuf, samples);
+            gLastBtActivity = millis();
+            
+            <span class="cm">// Отладка: выводим энергию каждые 100 буферов</span>
+            <span class="kw">static uint32_t</span> debugCount = <span class="num">0</span>;
+            <span class="kw">if</span> (++debugCount % <span class="num">100</span> == <span class="num">0</span>) {
+                <span class="kw">int64_t</span> sumSq = <span class="num">0</span>;
+                <span class="kw">for</span> (<span class="kw">size_t</span> i = <span class="num">0</span>; i < samples; i++) sumSq += (<span class="kw">int64_t</span>)pcmBuf[i] * pcmBuf[i];
+                <span class="kw">float</span> rms = sqrt((<span class="kw">double</span>)sumSq / samples);
+                Serial.printf(<span class="str">"[AUDIO] RMS=%.0f samples=%d\n"</span>, rms, samples);
+            }
+        }
+        
+    } <span class="kw">else if</span> (!gIsRecording) {
+        <span class="cm">// Не записываем — небольшая задержка чтобы не жечь CPU</span>
+        delay(<span class="num">10</span>);
+    } <span class="kw">else</span> {
+        <span class="cm">// Записываем но нет BT — ждём подключения</span>
+        delay(<span class="num">100</span>);
+    }
+}</code></pre>
+</div>
+
+<!-- ═══════════════════════════════ FLASH -->
+<h2 id="code-flash">
+  <span class="h2-icon" style="background:rgba(255,184,0,.1)">⚡</span>
+  Шаг 6 — Прошивка и отладка
+</h2>
+
+<h3>Как прошить</h3>
+<div class="code-block">
+  <div class="code-header"><span class="code-title">Команды PlatformIO (Terminal в VS Code)</span><span class="code-lang">BASH</span></div>
+  <pre><code><span class="cm"># Компиляция (проверяет ошибки)</span>
+pio run
+
+<span class="cm"># Прошивка (компиляция + загрузка)</span>
+pio run --target upload
+
+<span class="cm"># Открыть Serial Monitor для отладки</span>
+pio device monitor --baud 115200
+
+<span class="cm"># Всё сразу: скомпилировать, прошить, открыть монитор</span>
+pio run --target upload && pio device monitor</code></pre>
+</div>
+
+<h3>Что ты должен увидеть в Serial Monitor</h3>
+<div class="code-block">
+  <div class="code-header"><span class="code-title">Ожидаемый вывод</span><span class="code-lang">LOG</span></div>
+  <pre><code>=== VoiceMind Firmware v1.0 ===
+[I2S] Microphone INMP441 initialized OK
+[BT] Device 'VoiceMind-01' is discoverable
+[OK] VoiceMind ready!
+[OK] BT name: VoiceMind-01
+[OK] Press BTN to start recording
+
+<span class="cm">--- После нажатия кнопки ---</span>
+[BTN] Recording: ON
+[AUDIO] RMS=847 samples=512     <span class="cm">← хорошо, микрофон работает</span>
+[AUDIO] RMS=1205 samples=512    <span class="cm">← говоришь — RMS растёт</span>
+[AUDIO] RMS=312 samples=512     <span class="cm">← тишина — RMS падает</span>
+
+<span class="cm">--- Если что-то не так ---</span>
+[AUDIO] RMS=0 samples=512       <span class="cm">← нет сигнала, проверь WS и SD провода</span>
+[I2S] driver_install failed: -1 <span class="cm">← неверные пины в config.h</span></code></pre>
+</div>
+
+<div class="callout warn">
+  <div class="callout-icon">⚠️</div>
+  <div class="callout-body">
+    <strong>Если RMS всегда 0 или очень маленький</strong>
+    <p>1) Проверь что L/R пин на GND. 2) Убедись что пины в config.h совпадают с реальными проводами. 3) Попробуй поменять WS и SCK местами. 4) Проверь питание — только 3.3V. 5) Попробуй уменьшить длину проводов к SCK (&lt;5см).</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ALGORITHMS -->
+<h2 id="algorithms">
+  <span class="h2-icon" style="background:rgba(124,58,237,.15)">🧠</span>
+  Шаг 7 — Что изучить: алгоритмы и концепции
+</h2>
+
+<div class="learn-grid">
+
+  <div class="learn-card">
+    <div class="learn-card-icon">🔊</div>
+    <div class="learn-card-title">Цифровая обработка сигналов (DSP)</div>
+    <div><span class="learn-card-level level-must">ОБЯЗАТЕЛЬНО</span></div>
+    <p>PCM, дискретизация, теорема Найквиста, оконные функции (Hann), спектр Фурье (FFT). Нужно чтобы понимать что делает Vosk и настраивать VAD.</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">🎯</div>
+    <div class="learn-card-title">VAD — обнаружение голоса</div>
+    <div><span class="learn-card-level level-must">ОБЯЗАТЕЛЬНО</span></div>
+    <p>Energy-based VAD (RMS + EMA). Zero Crossing Rate. WebRTC VAD. Нужно чтобы не гонять Vosk на тишине и правильно делить на сегменты.</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">🔵</div>
+    <div class="learn-card-title">Bluetooth & I2S протоколы</div>
+    <div><span class="learn-card-level level-must">ОБЯЗАТЕЛЬНО</span></div>
+    <p>Как работает I2S (WS/SCK/SD), DMA, timing. BT Classic SPP vs BLE GATT — разница в throughput и latency. Уже применяешь!</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">🤖</div>
+    <div class="learn-card-title">Архитектуры ASR (Vosk/Kaldi)</div>
+    <div><span class="learn-card-level level-imp">ВАЖНО</span></div>
+    <p>HMM + GMM → DNN-HMM → End-to-end (CTC). Что такое акустическая модель, языковая модель, декодер. Как работает Kaldi внутри Vosk.</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">📝</div>
+    <div class="learn-card-title">TF-IDF + TextRank</div>
+    <div><span class="learn-card-level level-imp">ВАЖНО</span></div>
+    <p>Извлечение ключевых слов и суммаризация на Android. TF-IDF — статистика слов. TextRank — PageRank для предложений. Весь код уже в референсе!</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">📱</div>
+    <div class="learn-card-title">Android / Kotlin Coroutines</div>
+    <div><span class="learn-card-level level-imp">ВАЖНО</span></div>
+    <p>Flow, StateFlow, suspend fun, Dispatchers.IO. Нужно для асинхронной обработки BT-потока пока идёт UI. Без этого — ANR и фризы.</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">🔢</div>
+    <div class="learn-card-title">Линейная алгебра (базово)</div>
+    <div><span class="learn-card-level level-good">ЖЕЛАТЕЛЬНО</span></div>
+    <p>Векторы, матрицы, скалярное произведение — основа TextRank и TF-IDF. Нормализация векторов (cosine similarity для расширенного поиска).</p>
+  </div>
+
+  <div class="learn-card">
+    <div class="learn-card-icon">⚡</div>
+    <div class="learn-card-title">Embedded C++ / FreeRTOS</div>
+    <div><span class="learn-card-level level-good">ЖЕЛАТЕЛЬНО</span></div>
+    <p>Задачи (Tasks), очереди (Queues), мьютексы. ESP32 имеет FreeRTOS под капотом — можно вынести BT в отдельную задачу для стабильности.</p>
+  </div>
+
+</div>
+
+<h3>Порядок изучения (от простого к сложному)</h3>
+<table>
+  <tr><th>#</th><th>Тема</th><th>Ресурс</th><th>Время</th></tr>
+  <tr><td>1</td><td style="color:var(--text)">I2S + ESP32 Arduino (уже делаешь)</td><td>esp-idf docs, YouTube: Andreas Spiess</td><td>3-5 дней</td></tr>
+  <tr><td>2</td><td style="color:var(--text)">Bluetooth SPP на ESP32</td><td>ESP32 BT Serial examples в PlatformIO</td><td>2-3 дня</td></tr>
+  <tr><td>3</td><td style="color:var(--text)">PCM Audio: что такое сэмпл, частота, бит</td><td>книга: "The Scientists and Engineer's Guide to DSP"</td><td>неделя</td></tr>
+  <tr><td>4</td><td style="color:var(--text)">VAD — Voice Activity Detection</td><td>статья WebRTC VAD, GitHub: py-webrtcvad</td><td>3-4 дня</td></tr>
+  <tr><td>5</td><td style="color:var(--text)">Vosk API на Android</td><td>alphacephei.com/vosk/android</td><td>3-5 дней</td></tr>
+  <tr><td>6</td><td style="color:var(--text)">Kotlin Coroutines + Flow</td><td>kotlinlang.org/docs/coroutines</td><td>неделя</td></tr>
+  <tr><td>7</td><td style="color:var(--text)">TF-IDF (читай — 1 вечер)</td><td>статья Wikipedia + sklearn docs</td><td>1-2 дня</td></tr>
+  <tr><td>8</td><td style="color:var(--text)">TextRank (PageRank для текста)</td><td>оригинальная статья Mihalcea 2004, 8 страниц</td><td>2-3 дня</td></tr>
+</table>
+
+<!-- ═══════════════════════════════ MATH -->
+<h2 id="math">
+  <span class="h2-icon" style="background:rgba(0,255,136,.1)">∑</span>
+  Шаг 8 — Математика которую ты реально используешь
+</h2>
+
+<div class="math-box">
+  <div class="label">1. PCM — что это за числа</div>
+  Частота дискретизации: <span class="mv">fs</span> = <span class="mn">16 000</span> Гц → <span class="mn">16 000</span> замеров/с<br>
+  Каждый сэмпл: знаковое int16 ∈ [<span class="mn">-32768</span>, <span class="mn">+32767</span>]<br>
+  Поток данных: <span class="mv">R</span> = <span class="mn">16000</span> × 2 байта = <span class="mr">32 000 байт/с = 256 кбит/с</span>
+</div>
+
+<div class="math-box">
+  <div class="label">2. Конвертация INMP441: 32bit → 16bit</div>
+  INMP441 выдаёт: <span class="mn">[бит 31..8]</span> = данные (24 бита) | <span class="mn">[бит 7..0]</span> = 0x00<br>
+  Конвертация: <span class="mv">sample16</span> = <span class="kw">(int32_t)</span>raw >> <span class="mn">16</span><br>
+  Почему 16, а не 8? Сдвиг 16 = делим данные пополам, получаем 16-bit диапазон
+</div>
+
+<div class="math-box">
+  <div class="label">3. RMS Energy (для VAD)</div>
+  <span class="mv">E_rms</span> = √( (1/<span class="mn">N</span>) × Σᵢ <span class="mv">xᵢ</span>² )<br>
+  Где <span class="mn">N</span> = 512 (размер фрейма), <span class="mv">xᵢ</span> — сэмпл<br>
+  Типичные значения: тишина ≈ <span class="mn">100-400</span>, речь ≈ <span class="mn">800-8000</span><br>
+  Порог VAD: <span class="mv">thresh</span> = <span class="mr">500</span>
+</div>
+
+<div class="math-box">
+  <div class="label">4. EMA (сглаживание для VAD)</div>
+  <span class="mv">E_smooth</span>[t] = <span class="mn">α</span> × <span class="mv">E_rms</span>[t] + (<span class="mn">1 - α</span>) × <span class="mv">E_smooth</span>[t-1]<br>
+  α = <span class="mn">0.3</span> → временная константа TC ≈ <span class="mn">89 мс</span><br>
+  Меньше α → медленнее реагирует, больше сглаживания
+</div>
+
+<div class="math-box">
+  <div class="label">5. CRC-8 (целостность пакетов)</div>
+  Полином: <span class="mv">P(x)</span> = x⁸ + x⁵ + x⁴ + 1 → коэффициент <span class="mn">0x31</span><br>
+  Для каждого байта: CRC = CRC XOR byte, затем 8 итераций:<br>
+  &nbsp;&nbsp;если старший бит = 1: CRC = (CRC &lt;&lt; 1) XOR <span class="mn">0x31</span><br>
+  &nbsp;&nbsp;иначе: CRC = CRC &lt;&lt; 1<br>
+  Итог: <span class="mr">1 байт защиты на до 2 KB данных</span>
+</div>
+
+<!-- ═══════════════════════════════ VOSK NOTE -->
+<h2 id="vosk-note">
+  <span class="h2-icon" style="background:rgba(0,212,255,.1)">🤖</span>
+  Шаг 9 — Vosk: где и как он работает
+</h2>
+
+<div class="callout good">
+  <div class="callout-icon">✅</div>
+  <div class="callout-body">
+    <strong>Vosk запускается на Android, получает PCM поток от ESP32</strong>
+    <p>ESP32 шлёт сырые PCM данные (16kHz, 16-bit, mono) через BT. Android получает, собирает в чанки по 512-4096 сэмплов, подаёт в Vosk. Vosk возвращает JSON с текстом и временными метками слов.</p>
+  </div>
+</div>
+
+<h3>Что Vosk делает внутри (упрощённо)</h3>
+<div class="arch-banner">
+  <div class="arch-flow">
+    <div class="arch-node">PCM чанк</div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">MFCC фичи<br><span style="font-size:10px;font-weight:400">mel cepstrum</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">DNN акуст.<br><span style="font-size:10px;font-weight:400">фонемы</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">Viterbi<br><span style="font-size:10px;font-weight:400">декодер</span></div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node phone">Текст +<br><span style="font-size:10px;font-weight:400">timestamps</span></div>
+  </div>
+</div>
+
+<table>
+  <tr><th>Шаг</th><th>Что происходит</th></tr>
+  <tr><td>MFCC</td><td style="color:var(--muted)">Mel-Frequency Cepstral Coefficients — преобразует PCM в 40 коэффициентов, имитирующих восприятие слуха человека (логарифмическая шкала частот)</td></tr>
+  <tr><td>DNN</td><td style="color:var(--muted)">Нейросеть определяет вероятность каждой фонемы для текущего фрейма (~25мс окно)</td></tr>
+  <tr><td>Viterbi HMM</td><td style="color:var(--muted)">Алгоритм динамического программирования находит наиболее вероятную последовательность слов через языковую модель (n-gram)</td></tr>
+  <tr><td>Результат</td><td style="color:var(--muted)">JSON: {"text": "привет мир", "result": [{"word":"привет","start":0.3,"end":0.9,"conf":0.98}]}</td></tr>
+</table>
+
+<!-- ═══════════════════════════════ ROADMAP -->
+<h2 id="roadmap">
+  <span class="h2-icon" style="background:rgba(255,107,43,.15)">🗺️</span>
+  Шаг 10 — Полный роадмап от нуля до MVP
+</h2>
+
+<div class="roadmap">
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(0,255,136,.15);color:var(--green)">✓</div>
+    <div class="step-body">
+      <div class="step-title">Уже сделано: PlatformIO + ESP32</div>
+      <div class="step-desc">PlatformIO установлен, ESP32 подключён, проект создан.</div>
+      <div class="step-tags"><span class="tag green">ГОТОВО</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(0,212,255,.15);color:var(--accent)">1</div>
+    <div class="step-body">
+      <div class="step-title">Подключить INMP441 и проверить сигнал</div>
+      <div class="step-desc">Соединить по схеме выше, прошить код из этого гайда, проверить RMS в Serial Monitor. Цель: RMS > 500 при разговоре.</div>
+      <div class="step-tags"><span class="tag blue">2-3 ДНЯ</span><span class="tag blue">ESP32</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(0,212,255,.15);color:var(--accent)">2</div>
+    <div class="step-body">
+      <div class="step-title">Проверить Bluetooth: принять аудио на ПК</div>
+      <div class="step-desc">Напиши Python-скрипт на ПК который подключается к ESP32 по BT SPP, принимает пакеты, сохраняет PCM в .wav файл. Открой в Audacity — должна быть речь.</div>
+      <div class="step-tags"><span class="tag blue">3-5 ДНЕЙ</span><span class="tag amber">PYTHON</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(255,184,0,.15);color:var(--amber)">3</div>
+    <div class="step-body">
+      <div class="step-title">Android: BT receiver + Vosk</div>
+      <div class="step-desc">Создай Android проект, реализуй BT SPP клиент, подключи Vosk. Принимай PCM, подавай в Vosk, выводи текст на экран. Это MVP #1.</div>
+      <div class="step-tags"><span class="tag amber">1-2 НЕДЕЛИ</span><span class="tag red">ANDROID</span><span class="tag purple">VOSK</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(255,184,0,.15);color:var(--amber)">4</div>
+    <div class="step-body">
+      <div class="step-title">NLP Pipeline: ключевые слова + саммари</div>
+      <div class="step-desc">Добавь VAD (не гоняй Vosk на тишине), TF-IDF extraction, TextRank summarizer. Код уже есть в референсе — адаптируй.</div>
+      <div class="step-tags"><span class="tag amber">1 НЕДЕЛЯ</span><span class="tag purple">NLP</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(124,58,237,.15);color:#a78bfa">5</div>
+    <div class="step-body">
+      <div class="step-title">Room DB + UI (Compose)</div>
+      <div class="step-desc">Сохраняй заметки в SQLite через Room, сделай экран списка записей, детального просмотра, поиска. MVP #2.</div>
+      <div class="step-tags"><span class="tag purple">1-2 НЕДЕЛИ</span><span class="tag red">COMPOSE</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(255,107,43,.15);color:var(--orange)">6</div>
+    <div class="step-body">
+      <div class="step-title">Железо: PCB + корпус + батарея</div>
+      <div class="step-desc">Спроектируй PCB в KiCad, закажи на JLCPCB ($5 за 5 штук), распечатай корпус, добавь Li-Po + TP4056. Финальный девайс.</div>
+      <div class="step-tags"><span class="tag red">2-4 НЕДЕЛИ</span><span class="tag green">HARDWARE</span></div>
+    </div>
+  </div>
+  <div class="roadmap-step">
+    <div class="step-circle" style="background:rgba(0,255,136,.15);color:var(--green)">7</div>
+    <div class="step-body">
+      <div class="step-title">Полировка: аналитика, экспорт, UI</div>
+      <div class="step-desc">Дашборд с топ-темами, экспорт в PDF/TXT, шаринг в мессенджеры, оптимизация батареи ESP32. Публичный релиз.</div>
+      <div class="step-tags"><span class="tag green">MVP ГОТОВ</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="callout idea">
+  <div class="callout-icon">💡</div>
+  <div class="callout-body">
+    <strong>Совет по разработке</strong>
+    <p>Не пытайся делать всё сразу. <strong>Этап 2 (Python скрипт)</strong> — это золотой шаг. Если аудио нормально пришло на ПК и звучит правильно в Audacity, значит ESP32 работает идеально. Потом уже пишешь Android без страха что что-то не так с железом.</p>
+  </div>
+</div>
+
+<hr>
+<p style="font-size:12px;text-align:center;color:var(--border2);padding:20px 0;font-family:var(--mono)">
+  VoiceMind ESP32 Guide v1.0 · INMP441 + Bluetooth SPP + Vosk Architecture
+</p>
+
+<script>
+const links = document.querySelectorAll('nav a');
+const sections = [...document.querySelectorAll('h2[id]')];
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id;
+      links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+    }
+  });
+}, { rootMargin: '-15% 0px -75% 0px' });
+sections.forEach(s => obs.observe(s));
+links.forEach(l => l.addEventListener('click', e => {
+  e.preventDefault();
+  const el = document.querySelector(l.getAttribute('href'));
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}));
+</script>
+</body>
+</html>
